@@ -1,0 +1,1508 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oval, the Olin community</title>
+<meta name="description" content="Oval: an interactive mockup of a community app for the Olin College of Engineering community. All people and posts are fictional sample data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F7FC}
+a{color:#2443C9}a:hover{color:#1A2F8F}
+button,input,select,textarea{font:inherit;color:inherit}
+input[type=checkbox],input[type=radio]{accent-color:#2443C9}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #2443C9;outline-offset:2px}
+.row:hover{background:#EEF2FC}
+.ghost:hover{background:#EDEFF3}
+.chipbtn:hover{border-color:#2443C9}
+.card{transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:#AEB9E8;box-shadow:0 6px 20px rgba(17,24,39,.07)}
+.pop .pav{transition:transform .15s}
+.pop:hover .pav,.pop:focus-visible .pav{transform:scale(1.1)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+<script src="vue.global.prod.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<script type="text/x-template" id="app-template">
+<div style="min-height: 100vh; background: #F5F7FC; color: #111827; font-family: 'Inter', system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+<header style="background: #FFFFFF; border-bottom: 1px solid #E3E5EA; position: sticky; top: 0; z-index: 30">
+<div style="max-width: 1280px; margin: 0 auto; padding: 10px clamp(12px, 2.5vw, 28px); display: flex; align-items: center; gap: 10px 20px; flex-wrap: wrap">
+<button @click="goHome" aria-label="Oval home" style="display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 6px 0; cursor: pointer">
+<svg width="32" height="20" viewBox="0 0 34 22" aria-hidden="true"><ellipse cx="17" cy="11" rx="15" ry="9" fill="none" stroke="#2443C9" stroke-width="3"></ellipse><circle cx="17" cy="11" r="3" fill="#2443C9"></circle></svg>
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.02em">Oval</span>
+</button>
+<div style="flex: 1 1 300px; min-width: 0; display: flex; align-items: center; gap: 10px; background: #F5F7FC; border: 1.5px solid #C4CAD6; border-radius: 12px; padding: 0 6px 0 14px; min-height: 46px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<label for="q" class="sr">Search people</label>
+<input id="q" type="search" autocomplete="off" :value="q" @input="onQ" placeholder="Search Oliners by name, skill, company, or club" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 15.5px; padding: 10px 0">
+<template v-if="hasQ">
+<button @click="clearQ" aria-label="Clear search" class="ghost" style="width: 36px; height: 36px; border-radius: 8px; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</button>
+</template>
+</div>
+<nav aria-label="Main" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap">
+<template v-for="t in nav">
+<button class="ghost" @click="t.go" :aria-pressed="t.on" :aria-label="t.aria" :style="`display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 0; cursor: pointer; font-weight: 600; background: ${t.bg}; color: ${t.fg}`">{{t.label}}<template v-if="t.hasBadge"><span style="min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #2443C9; color: #FFFFFF; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">{{t.badge}}</span></template></button>
+</template>
+<span aria-label="Your account" style="width: 38px; height: 38px; border-radius: 50%; background: #111827; overflow: hidden; display: flex; margin-left: 4px">
+<svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg>
+</span>
+</nav>
+</div>
+</header>
+
+<template v-if="isHome">
+<div style="max-width: 1280px; margin: 0 auto; padding: 20px clamp(12px, 2.5vw, 28px) 0">
+<figure style="margin: 0; position: relative; border-radius: 20px; overflow: hidden; border: 1px solid #E3E5EA; height: clamp(160px, 22vw, 280px); background: #DCE3F5">
+<img src="olin-campus.jpg" alt="Olin College of Engineering's academic center on a sunny day" style="display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 40%">
+<figcaption style="position: absolute; left: 16px; bottom: 14px; display: flex; flex-direction: column; gap: 2px; background: rgba(255, 255, 255, 0.94); padding: 10px 14px; border-radius: 12px; box-shadow: 0 4px 16px rgba(17, 24, 39, 0.12)">
+<span style="font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.01em">Welcome to the Oval</span>
+<span style="font-size: 13px; color: #374151">Students, alumni, faculty and staff, all in one place.</span>
+</figcaption>
+</figure>
+</div>
+<div style="max-width: 1280px; margin: 0 auto; padding: 24px clamp(12px, 2.5vw, 28px) 64px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<main aria-label="Feed" style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 14px">
+<h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 28px; line-height: 1.1; letter-spacing: -0.02em; text-align: center">What's new at Olin</h1>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px">
+<label for="typeSel" class="sr">Type of post</label>
+<select id="typeSel" :value="ftype" @change="onType" style="min-height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid #C4CAD6; background: #FFFFFF; font-size: 14px; font-weight: 600">
+<option value="all">All types</option>
+<option value="project">Projects</option>
+<option value="award">Wins &amp; awards</option>
+<option value="startup">Startups</option>
+<option value="event">Events</option>
+<option value="news">School news</option>
+</select>
+<label for="groupSel" class="sr">Group</label>
+<select id="groupSel" :value="fgroup" @change="onGroup" style="min-height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid #C4CAD6; background: #FFFFFF; font-size: 14px; font-weight: 600">
+<option value="all">All groups</option>
+<option value="Olin Rocketry">Olin Rocketry</option>
+<option value="Olin Electric Motorsports">Olin Electric Motorsports</option>
+<option value="Olin Robotics Lab">Olin Robotics Lab</option>
+<option value="Entrepreneurship Club">Entrepreneurship Club</option>
+<option value="Sustainability Club">Sustainability Club</option>
+<option value="Olin Hackathon">Olin Hackathon</option>
+</select>
+<span style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 3px 3px 10px; border: 1px dashed #C4CAD6; border-radius: 10px">
+<span style="font-size: 12px; font-weight: 600; color: #4B5563">Preview as</span>
+<span style="display: flex; gap: 2px; background: #EEF0F4; padding: 2px; border-radius: 8px">
+<template v-for="va in viewAs">
+<button @click="va.pick" :aria-pressed="va.on" :style="`min-height: 30px; padding: 0 10px; border-radius: 6px; border: 0; cursor: pointer; font-weight: 600; font-size: 12.5px; background: ${va.bg}; box-shadow: ${va.shadow}`">{{va.label}}</button>
+</template>
+</span>
+</span>
+</div>
+</div>
+<template v-if="isAlum">
+<p style="margin: 0; display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px; background: #FFFFFF; border: 1px solid #C9D3F3; font-size: 14px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2443C9" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>
+<span>Your feed, in order: <strong>news from Olin</strong>, then <strong>{{followsText}}</strong>, then everything else.</span>
+</p>
+</template>
+<template v-for="p in posts">
+<article style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; overflow: hidden">
+<div style="padding: 18px 20px 0; display: flex; align-items: center; gap: 12px">
+<button @click="p.openAuthor" :aria-label="p.authorAria" :style="`width: 44px; height: 44px; border-radius: 50%; background: ${p.authorFill}; border: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; padding: 0`">
+<template v-if="p.isOrg">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6"></path><path d="M5 10v9M9.5 10v9M14.5 10v9M19 10v9M3 20h18"></path></svg>
+</template>
+<template v-if="p.isPerson">
+<svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg>
+</template>
+</button>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+<span style="font-weight: 600; font-size: 15px">{{p.authorName}} <span :style="`font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: ${p.roleBg}; color: ${p.roleFg}; margin-left: 4px`">{{p.authorTag}}</span></span>
+<span style="font-size: 13px; color: #4B5563">{{p.authorLine}} · {{p.time}}</span>
+</div>
+<span style="flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
+<span :style="`font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: ${p.typeBg}; color: ${p.typeFg}`">{{p.typeLabel}}</span>
+<template v-if="p.hasGroup">
+<span style="font-size: 12px; color: #4B5563">{{p.group}}</span>
+</template>
+</span>
+</div>
+<div style="padding: 12px 20px 0">
+<template v-if="p.showNote">
+<p style="margin: 0 0 6px; font-size: 12.5px; font-weight: 600; color: #1E3AA8">{{p.noteText}}</p>
+</template>
+<h2 style="margin: 0 0 6px; font-family: 'Space Grotesk', sans-serif; font-size: 21px; line-height: 1.2; letter-spacing: -0.01em">{{p.title}}</h2>
+<p style="margin: 0; font-size: 15px; line-height: 1.6">{{p.body}}</p>
+</div>
+<div role="img" :aria-label="p.imgAlt" :style="`position: relative; margin: 14px 20px 0; height: 200px; border-radius: 14px; background: ${p.imgBg}; overflow: hidden`">
+<span aria-hidden="true" :style="`position: absolute; width: 170px; height: 170px; border-radius: 50%; background: ${p.shapeA}; right: -30px; top: -50px; opacity: 0.8`"></span>
+<span aria-hidden="true" :style="`position: absolute; width: 110px; height: 110px; border-radius: 26px; background: ${p.shapeB}; left: 30px; bottom: -34px; transform: rotate(-14deg); opacity: 0.8`"></span>
+<span style="position: absolute; left: 12px; top: 12px; font-size: 12px; font-weight: 600; background: rgba(255, 255, 255, 0.92); border-radius: 999px; padding: 3px 10px; color: #374151">Photo · {{p.imgAlt}}</span>
+</div>
+<template v-if="p.hasEvent">
+<div style="margin: 12px 20px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 14px; border: 1px solid #E3E5EA; border-radius: 12px; background: #F7F8FC">
+<span style="font-weight: 700">{{p.eventWhen}}</span>
+<span style="color: #4B5563">{{p.eventWhere}}</span>
+<span style="flex: 1"></span>
+<button @click="p.toggleGoing" :aria-pressed="p.going" :style="`min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid ${p.goingBd}; background: ${p.goingBg}; color: ${p.goingFg}; cursor: pointer; font-weight: 600`">{{p.goingLabel}}</button>
+</div>
+</template>
+
+<template v-if="p.hasLink">
+<div style="margin: 12px 20px 0; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: #F2F5FD">
+<span aria-hidden="true" style="display: flex; align-items: center; flex-shrink: 0">
+<template v-for="ch in p.chain">
+<template v-if="ch.dash"><span style="width: 16px; border-top: 2px dashed #8EA2D6"></span></template>
+<span :style="`width: 26px; height: 26px; border-radius: 50%; background: ${ch.fill}; overflow: hidden; display: flex; box-shadow: 0 0 0 2px #FFFFFF`"><svg width="100%" height="100%" viewBox="0 0 24 24"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+</template>
+</span>
+<span style="font-size: 13.5px; color: #1F2A52">{{p.linkText}}</span>
+</div>
+</template>
+
+<template v-if="p.hasTags">
+<div style="padding: 12px 20px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px">
+<span style="font-size: 13px; color: #4B5563; margin-right: 2px">With</span>
+<template v-for="tg in p.tags">
+<button @click="tg.open" class="chipbtn" style="display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px 0 3px; border-radius: 999px; border: 1px solid #D5D9E2; background: #FFFFFF; cursor: pointer; font-size: 13px; font-weight: 600">
+<span :style="`width: 24px; height: 24px; border-radius: 50%; background: ${tg.fill}; overflow: hidden; display: flex`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+{{tg.name}}
+</button>
+</template>
+</div>
+</template>
+
+<div style="padding: 12px 20px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px">
+<template v-for="rx in p.reactions">
+<button @click="rx.toggle" :aria-pressed="rx.on" :aria-label="rx.aria" :style="`display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 12px; border-radius: 999px; border: 1px solid ${rx.bd}; background: ${rx.bg}; color: ${rx.fg}; cursor: pointer; font-weight: 600; font-size: 13.5px`">
+<svg width="16" height="16" viewBox="0 0 24 24" :fill="rx.fill" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path :d="rx.icon"></path></svg>
+{{rx.label}} <span style="font-weight: 500">{{rx.count}}</span>
+</button>
+</template>
+<button @click="p.toggleComments" :aria-expanded="p.commentsOpen" :style="`display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 12px; border-radius: 999px; border: 1px solid #D5D9E2; background: ${p.cBtnBg}; cursor: pointer; font-weight: 600; font-size: 13.5px`">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z"></path></svg>
+{{p.commentLabel}}
+</button>
+<span style="flex: 1"></span>
+<template v-if="p.canReach">
+<button @click="p.reach" style="display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 0; background: #2443C9; color: #FFFFFF; cursor: pointer; font-weight: 600">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10 14"></path><path d="M21 3l-7 18-4-7-7-4 18-7z"></path></svg>
+{{p.reachLabel}}
+</button>
+</template>
+</div>
+
+<template v-if="p.commentsOpen">
+<div style="border-top: 1px solid #E3E5EA; background: #FAFBFE; padding: 14px 20px 16px; display: flex; flex-direction: column; gap: 12px">
+<template v-for="c in p.comments">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; gap: 10px; align-items: flex-start">
+<span :style="`width: 32px; height: 32px; border-radius: 50%; background: ${c.fill}; overflow: hidden; display: flex; flex-shrink: 0`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<div style="flex: 1; min-width: 0">
+<div style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 4px 14px 14px 14px; padding: 8px 12px">
+<span style="font-weight: 600; font-size: 13.5px">{{c.name}}</span> <span style="font-size: 12px; color: #4B5563">{{c.tag}}</span>
+<p style="margin: 2px 0 0; font-size: 14px">{{c.text}}</p>
+</div>
+<button @click="c.reply" style="min-height: 30px; padding: 0 6px; border: 0; background: none; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #2443C9">Reply</button>
+</div>
+</div>
+<template v-for="rp in c.replies">
+<div style="display: flex; gap: 10px; align-items: flex-start; margin-left: 42px">
+<span :style="`width: 26px; height: 26px; border-radius: 50%; background: ${rp.fill}; overflow: hidden; display: flex; flex-shrink: 0`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<div style="flex: 1; min-width: 0; background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 4px 14px 14px 14px; padding: 7px 12px">
+<span style="font-weight: 600; font-size: 13px">{{rp.name}}</span> <span style="font-size: 12px; color: #4B5563">{{rp.tag}}</span>
+<p style="margin: 2px 0 0; font-size: 13.5px">{{rp.text}}</p>
+</div>
+</div>
+</template>
+</div>
+</template>
+<template v-if="p.isReplying">
+<div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600">Replying to {{p.replyName}} <button @click="p.cancelReply" style="min-height: 30px; padding: 0 8px; border: 0; background: none; color: #2443C9; font-weight: 600; cursor: pointer">Cancel</button></div>
+</template>
+<div style="display: flex; gap: 8px; align-items: center">
+<label class="sr" :for="p.inputId">Write a comment</label>
+<input :id="p.inputId" type="text" :value="p.draft" @input="p.onDraft" :placeholder="p.placeholder" style="flex: 1; min-width: 0; min-height: 42px; padding: 0 14px; border-radius: 10px; border: 1px solid #C4CAD6; background: #FFFFFF; font-size: 14px">
+<button @click="p.postComment" style="min-height: 42px; padding: 0 16px; border-radius: 10px; border: 0; background: #2443C9; color: #FFFFFF; cursor: pointer; font-weight: 600">Post</button>
+</div>
+</div>
+</template>
+</article>
+</template>
+<template v-if="feedEmpty">
+<p style="margin: 0; padding: 24px; border: 1px dashed #C4CAD6; border-radius: 16px; background: #FFFFFF; color: #4B5563">Nothing here yet.</p>
+</template>
+<p style="margin: 4px 0 0; text-align: center; font-size: 13px; color: #4B5563">You're caught up on the last two weeks. Prototype · every post and person is fictional sample data.</p>
+</main>
+
+<aside aria-label="Your community" style="flex: 1 1 290px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 16px 16px 12px">
+<h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Your corner of Olin</h2>
+<p style="margin: 2px 0 6px; font-size: 13px; color: #4B5563">{{cornerSub}}</p>
+<div style="position: relative; width: 100%; aspect-ratio: 300 / 250">
+<svg viewBox="0 0 300 250" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none">
+<path :d="corner.dots" fill="#B9C6EA" fill-opacity="0.7"></path>
+<path :d="corner.classP" fill="none" stroke="#334155" stroke-opacity="0.7" stroke-width="1.5"></path>
+<path :d="corner.activityP" fill="none" stroke="#2443C9" stroke-opacity="0.7" stroke-width="1.6" stroke-dasharray="5 4"></path>
+<path :d="corner.companyP" fill="none" stroke="#0F766E" stroke-opacity="0.8" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 4"></path>
+</svg>
+<span aria-hidden="true" style="position: absolute; left: 50%; top: 47.2%; transform: translate(-50%, -50%); width: 42px; height: 42px; border-radius: 50%; background: #111827; overflow: hidden; display: flex; box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 5px #2443C9; z-index: 2">
+<svg width="100%" height="100%" viewBox="0 0 24 24"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg>
+</span>
+<template v-for="cn in corner.nodes">
+<button class="pop" @click="cn.open" :aria-label="cn.aria" :style="`position: absolute; left: ${cn.left}; top: ${cn.top}; transform: translate(-50%, -15px); z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: 0; padding: 0; cursor: pointer`">
+<span class="pav" :style="`width: 30px; height: 30px; border-radius: 50%; background: ${cn.fill}; overflow: hidden; display: flex; box-shadow: 0 0 0 2px #FFFFFF`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<span style="font-size: 11.5px; font-weight: 600; line-height: 1.2; background: rgba(255, 255, 255, 0.9); padding: 0 4px; border-radius: 4px; white-space: nowrap">{{cn.label}}</span>
+</button>
+</template>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; font-size: 11.5px; color: #4B5563">
+<span style="display: inline-flex; align-items: center; gap: 5px"><svg width="18" height="4" viewBox="0 0 18 4" aria-hidden="true"><line x1="1" y1="2" x2="17" y2="2" stroke="#2443C9" stroke-width="2" stroke-dasharray="5 4"></line></svg>Same club</span>
+<span style="display: inline-flex; align-items: center; gap: 5px"><svg width="18" height="4" viewBox="0 0 18 4" aria-hidden="true"><line x1="1" y1="2" x2="17" y2="2" stroke="#334155" stroke-width="2"></line></svg>Same class</span>
+<span style="display: inline-flex; align-items: center; gap: 5px"><svg width="18" height="4" viewBox="0 0 18 4" aria-hidden="true"><line x1="1" y1="2" x2="17" y2="2" stroke="#0F766E" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="1 4"></line></svg>Same company</span>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 16px">
+<h2 style="margin: 0 0 2px; font-family: 'Space Grotesk', sans-serif; font-size: 18px">{{helpersTitle}}</h2>
+<p style="margin: 0 0 8px; font-size: 13px; color: #4B5563">{{helpersSub}}</p>
+<div style="display: flex; flex-direction: column; gap: 2px; margin: 0 -6px">
+<template v-for="h in helpers">
+<button @click="h.open" class="row" style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 6px; border-radius: 12px; border: 0; background: transparent; cursor: pointer; text-align: left">
+<span :style="`width: 36px; height: 36px; border-radius: 50%; background: ${h.fill}; overflow: hidden; display: flex; flex-shrink: 0`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<span style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+<span style="font-weight: 600; font-size: 14px; line-height: 1.25">{{h.name}}</span>
+<span style="font-size: 12.5px; color: #4B5563">{{h.headline}}</span>
+<span style="display: flex; flex-wrap: wrap; gap: 4px">
+<template v-for="o in h.opens">
+<span style="font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: #E3F4EC; color: #146C43">{{o.label}}</span>
+</template>
+</span>
+</span>
+</button>
+</template>
+</div>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 16px">
+<h2 style="margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: 18px">Coming up</h2>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<template v-for="u in upcoming">
+<div style="display: flex; gap: 12px; align-items: center">
+<span style="width: 48px; flex-shrink: 0; text-align: center; border: 1px solid #E3E5EA; border-radius: 10px; overflow: hidden">
+<span style="display: block; background: #2443C9; color: #FFFFFF; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; padding: 1px 0">{{u.mon}}</span>
+<span style="display: block; font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; line-height: 1.4">{{u.day}}</span>
+</span>
+<span style="display: flex; flex-direction: column; min-width: 0">
+<span style="font-weight: 600; font-size: 14px">{{u.title}}</span>
+<span style="font-size: 12.5px; color: #4B5563">{{u.sub}}</span>
+</span>
+</div>
+</template>
+</div>
+</section>
+</aside>
+</div>
+</template>
+
+<template v-if="isMsgs">
+<main style="max-width: 1280px; margin: 0 auto; padding: 16px clamp(12px, 2.5vw, 28px) 32px">
+<div style="display: flex; flex-wrap: wrap; background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 14px; overflow: hidden">
+
+<aside aria-label="Message list" style="flex: 1 1 340px; max-width: 100%; min-width: 0; border-right: 1px solid #E3E5EA; display: flex; flex-direction: column; height: 720px">
+<div style="padding: 14px 14px 10px; border-bottom: 1px solid #E3E5EA; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px; letter-spacing: -0.01em">Messages</h1>
+<button @click="toggleNew" :aria-expanded="newOpen" style="display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 14px; border-radius: 8px; border: 0; background: #2443C9; color: #FFFFFF; cursor: pointer; font-weight: 600; font-size: 13.5px">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"></path></svg>
+New message
+</button>
+</div>
+<template v-if="newOpen">
+<div style="border: 1px solid #C9D3F3; background: #F5F7FC; border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 4px">
+<label for="toPick" style="font-size: 12.5px; font-weight: 600; color: #374151">To</label>
+<input id="toPick" type="text" autocomplete="off" :value="toQ" @input="onToQ" placeholder="Type an Oliner's name" style="min-height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid #C4CAD6; background: #FFFFFF; font-size: 14px">
+<template v-for="tp in toList">
+<button @click="tp.pick" class="row" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 6px; border-radius: 8px; border: 0; background: transparent; cursor: pointer; text-align: left">
+<span :style="`width: 28px; height: 28px; border-radius: 50%; background: ${tp.fill}; overflow: hidden; display: flex; flex-shrink: 0`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<span style="display: flex; flex-direction: column; min-width: 0"><span style="font-size: 13.5px; font-weight: 600">{{tp.name}}</span><span style="font-size: 12px; color: #4B5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{tp.headline}}</span></span>
+</button>
+</template>
+</div>
+</template>
+<div style="display: flex; align-items: center; gap: 8px; background: #F5F7FC; border: 1px solid #D5D9E2; border-radius: 8px; padding: 0 10px; min-height: 38px">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+<label for="msgSearch" class="sr">Search messages</label>
+<input id="msgSearch" type="search" :value="mq" @input="onMq" placeholder="Search messages" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 14px; padding: 8px 0">
+</div>
+<div role="tablist" aria-label="Filter messages" style="display: flex; gap: 16px; font-size: 13.5px">
+<template v-for="mt in mtabs">
+<button role="tab" :aria-selected="mt.on" @click="mt.pick" :style="`min-height: 32px; padding: 0 2px; border: 0; border-bottom: 2px solid ${mt.bd}; background: none; cursor: pointer; font-weight: 600; color: ${mt.fg}`">{{mt.label}}</button>
+</template>
+</div>
+</div>
+<div style="flex: 1; overflow-y: auto">
+<template v-for="th in threads">
+<button @click="th.open" :aria-current="th.on" class="row" :style="`display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 12px 14px 12px 11px; border: 0; border-left: 3px solid ${th.bar}; border-bottom: 1px solid #EEF0F4; background: ${th.bg}; cursor: pointer; text-align: left`">
+<span :style="`width: 36px; height: 36px; border-radius: 50%; background: ${th.fill}; overflow: hidden; display: flex; flex-shrink: 0; margin-top: 2px`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<span style="display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px">
+<span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span :style="`font-weight: ${th.fw}; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`">{{th.name}}</span><span :style="`font-size: 12px; color: ${th.timeFg}; font-weight: ${th.timeFw}; flex-shrink: 0`">{{th.time}}</span></span>
+<span :style="`font-size: 13.5px; font-weight: ${th.fw}; color: ${th.subFg}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis`">{{th.subject}}</span>
+<span style="font-size: 13px; color: #4B5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{th.snippet}}</span>
+</span>
+</button>
+</template>
+<template v-if="noThreads">
+<p style="margin: 0; padding: 24px 16px; font-size: 14px; color: #4B5563; text-align: center">{{noThreadsText}}</p>
+</template>
+</div>
+</aside>
+
+<section aria-label="Reading pane" style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; height: 720px; background: #FAFBFE">
+<template v-if="hasThread">
+<div style="padding: 16px 22px 14px; background: #FFFFFF; border-bottom: 1px solid #E3E5EA; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 21px; line-height: 1.25; letter-spacing: -0.01em; min-width: 0">{{ct.subject}}</h2>
+<button @click="ct.viewProfile" class="ghost" style="min-height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #D5D9E2; background: #FFFFFF; cursor: pointer; font-weight: 600; font-size: 13px">View profile</button>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 13px; color: #4B5563">
+<span>With <strong style="color: #111827">{{ct.name}}</strong></span>
+<span :style="`font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: ${ct.roleBg}; color: ${ct.roleFg}`">{{ct.tag}}</span>
+<span>{{ct.headline}}</span>
+</div>
+<template v-if="ct.hasLink">
+<p style="margin: 0; font-size: 12.5px; color: #1E3AA8; background: #E8ECFB; padding: 4px 10px; border-radius: 8px; align-self: flex-start">{{ct.linkText}}</p>
+</template>
+</div>
+<div id="msgScroll" style="flex: 1 1 auto; overflow-y: auto; padding: 16px 22px; display: flex; flex-direction: column; gap: 12px">
+<template v-for="m in ct.msgs">
+<template v-if="m.isNote">
+<p style="margin: 0 auto; font-size: 12.5px; font-weight: 600; color: #1E3AA8; background: #E8ECFB; padding: 4px 12px; border-radius: 999px; text-align: center; max-width: 90%">{{m.text}}</p>
+</template>
+<template v-if="m.isMsg">
+<article :style="`background: #FFFFFF; border: 1px solid #E3E5EA; border-left: 3px solid ${m.bar}; border-radius: 10px; padding: 12px 16px`">
+<header style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px">
+<span :style="`width: 30px; height: 30px; border-radius: 50%; background: ${m.fill}; overflow: hidden; display: flex; flex-shrink: 0`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<span style="font-weight: 600; font-size: 14px; flex: 1">{{m.who}}</span>
+<span style="font-size: 12px; color: #4B5563">{{m.time}}</span>
+</header>
+<p style="margin: 0; font-size: 14.5px; line-height: 1.6; padding-left: 40px">{{m.text}}</p>
+</article>
+</template>
+</template>
+<template v-if="ct.typing">
+<p style="margin: 0; font-size: 13px; color: #4B5563; font-style: italic">{{ct.first}} is writing a reply…</p>
+</template>
+<template v-if="ct.isEmpty">
+<p style="margin: auto; font-size: 14px; color: #4B5563; text-align: center">This is the start of your conversation with {{ct.first}}.</p>
+</template>
+</div>
+<div style="padding: 12px 22px 16px; background: #FFFFFF; border-top: 1px solid #E3E5EA; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<template v-for="qk in quick">
+<button @click="qk.use" class="chipbtn" style="min-height: 30px; padding: 0 10px; border-radius: 999px; border: 1px solid #D5D9E2; background: #FFFFFF; cursor: pointer; font-size: 12.5px">{{qk.label}}</button>
+</template>
+</div>
+<form @submit="sendChat" style="display: flex; flex-direction: column; gap: 8px; border: 1px solid #C4CAD6; border-radius: 10px; padding: 8px 10px">
+<label for="chat" style="font-size: 12.5px; font-weight: 600; color: #374151">Reply to {{ct.first}}</label>
+<textarea id="chat" rows="3" :value="chatDraft" @input="onChat" placeholder="Write your reply" style="border: 0; padding: 0; font-size: 14.5px; line-height: 1.5; resize: vertical; outline-offset: 4px"></textarea>
+<div style="display: flex; justify-content: flex-end"><button type="submit" :style="`min-height: 38px; padding: 0 18px; border-radius: 8px; border: 0; background: ${chatBtnBg}; color: #FFFFFF; font-weight: 600; cursor: pointer`">Send</button></div>
+</form>
+</div>
+</template>
+<template v-if="noThread">
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 40px; text-align: center; color: #4B5563">
+<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#8EA2D6" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 7l9 6 9-6"></path></svg>
+<p style="margin: 0; font-weight: 600; color: #111827">Select a conversation to read it</p>
+<p style="margin: 0; font-size: 14px">It opens here.</p>
+</div>
+</template>
+</section>
+</div>
+<p style="margin: 10px 0 0; font-size: 12.5px; color: #4B5563">Prototype · conversations are fictional sample data, and replies are simulated.</p>
+</main>
+</template>
+
+<template v-if="isDir">
+<main style="max-width: 1180px; margin: 0 auto; padding: 24px clamp(12px, 2.5vw, 28px) 64px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 14px">
+<h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 28px; letter-spacing: -0.02em">{{dirTitle}}</h1>
+<span style="font-size: 14px; color: #4B5563">{{dirSub}}</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 18px">
+<div style="display: flex; flex-wrap: wrap; gap: 3px; background: #EEF0F4; padding: 3px; border-radius: 10px">
+<template v-for="r in roles">
+<button @click="r.pick" :aria-pressed="r.on" :style="`min-height: 36px; padding: 0 11px; border-radius: 8px; border: 0; cursor: pointer; font-weight: 600; font-size: 13.5px; background: ${r.bg}; color: #111827; box-shadow: ${r.shadow}`">{{r.label}} <span style="font-weight: 500; color: #4B5563">{{r.count}}</span></button>
+</template>
+</div>
+<label class="sr" for="fopen">Open to</label>
+<select id="fopen" :value="openF" @change="onOpen" style="min-height: 38px; padding: 0 8px; border-radius: 9px; border: 1px solid #D5D9E2; background: #FFFFFF; font-size: 13.5px">
+<option value="">Open to anything</option>
+<option value="Coffee chats">Open to coffee chats</option>
+<option value="Mentoring">Open to mentoring</option>
+<option value="Co-op referrals">Open to co-op referrals</option>
+<option value="Resume reviews">Open to resume reviews</option>
+</select>
+<label class="sr" for="find">Industry</label>
+<select id="find" :value="ind" @change="onInd" style="min-height: 38px; padding: 0 8px; border-radius: 9px; border: 1px solid #D5D9E2; background: #FFFFFF; font-size: 13.5px">
+<option value="">Any industry</option>
+<option value="Aerospace">Aerospace</option>
+<option value="Automotive">Automotive</option>
+<option value="Climate &amp; Energy">Climate &amp; Energy</option>
+<option value="Design">Design</option>
+<option value="Education">Education</option>
+<option value="Finance &amp; VC">Finance &amp; VC</option>
+<option value="Hardware">Hardware</option>
+<option value="Health &amp; Bio">Health &amp; Bio</option>
+<option value="Robotics">Robotics</option>
+<option value="Software">Software</option>
+</select>
+<label class="sr" for="floc">Location</label>
+<select id="floc" :value="loc" @change="onLoc" style="min-height: 38px; padding: 0 8px; border-radius: 9px; border: 1px solid #D5D9E2; background: #FFFFFF; font-size: 13.5px">
+<option value="">Anywhere</option>
+<option value="Boston area">Boston area</option>
+<option value="Bay Area">Bay Area</option>
+<option value="New York">New York</option>
+<option value="Seattle">Seattle</option>
+<option value="Los Angeles">Los Angeles</option>
+<option value="Austin">Austin</option>
+</select>
+<template v-if="hasFilters">
+<button @click="clearFilters" style="background: none; border: 0; color: #2443C9; font-weight: 600; cursor: pointer; min-height: 36px; padding: 0 6px; font-size: 13.5px">Clear filters</button>
+</template>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px">
+<template v-for="pp in people">
+<button @click="pp.open" class="card" style="text-align: left; display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 16px; border: 1px solid #E3E5EA; background: #FFFFFF; cursor: pointer; width: 100%">
+<span style="display: flex; align-items: center; gap: 12px">
+<span :style="`width: 46px; height: 46px; border-radius: 50%; background: ${pp.fill}; overflow: hidden; display: flex; flex-shrink: 0`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<span style="display: flex; flex-direction: column; min-width: 0; gap: 3px">
+<span style="font-weight: 650; font-size: 16px; line-height: 1.2">{{pp.name}}</span>
+<span :style="`align-self: flex-start; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: ${pp.roleBg}; color: ${pp.roleFg}`">{{pp.tag}}</span>
+</span>
+</span>
+<span style="font-size: 14px; font-weight: 500">{{pp.headline}}</span>
+<template v-if="pp.hasWhy">
+<span style="font-size: 12.5px; color: #1E3AA8; background: #E8ECFB; padding: 4px 9px; border-radius: 8px; align-self: flex-start">{{pp.why}}</span>
+</template>
+<template v-if="pp.hasOpens">
+<span style="display: flex; flex-wrap: wrap; gap: 4px">
+<template v-for="o in pp.opens">
+<span style="font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: #E3F4EC; color: #146C43">{{o.label}}</span>
+</template>
+</span>
+</template>
+<span style="font-size: 13px; color: #4B5563">{{pp.city}}</span>
+</button>
+</template>
+</div>
+<template v-if="isEmpty">
+<div style="padding: 24px; border: 1px dashed #C4CAD6; border-radius: 16px; background: #FFFFFF">
+<p style="margin: 0 0 12px; color: #4B5563">{{emptyBody}}</p>
+<button @click="resetAll" style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #D5D9E2; background: #FFFFFF; cursor: pointer; font-weight: 600">Show everyone</button>
+</div>
+</template>
+</main>
+</template>
+
+<template v-if="isProfile">
+<div>
+<section aria-label="Their connections" style="position: relative; background: #EEF2FC; border-bottom: 1px solid #DCE3F5">
+<button class="ghost" @click="goBack" style="position: absolute; top: 14px; left: clamp(12px, 2vw, 24px); z-index: 5; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 10px; border-radius: 10px; border: 1px solid #DCE3F5; background: #FFFFFF; cursor: pointer; font-weight: 600">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+{{backLabel}}
+</button>
+<div style="overflow-x: auto">
+<div style="position: relative; max-width: 1200px; min-width: 720px; margin: 0 auto; aspect-ratio: 1000 / 300">
+<svg viewBox="0 0 1000 300" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none">
+<path :d="mw.dots" fill="#8EA2D6" fill-opacity="0.22"></path>
+<path :d="mw.classP" fill="none" stroke="#334155" stroke-opacity="0.8" stroke-width="2"></path>
+<path :d="mw.activityP" fill="none" stroke="#2443C9" stroke-opacity="0.85" stroke-width="2.2" stroke-dasharray="7 5"></path>
+<path :d="mw.companyP" fill="none" stroke="#0F766E" stroke-opacity="0.9" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 5"></path>
+</svg>
+<span :style="`position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 88px; height: 88px; border-radius: 50%; background: ${prof.fill}; overflow: hidden; display: flex; box-shadow: 0 0 0 5px #FFFFFF, 0 8px 24px rgba(17, 24, 39, 0.18); z-index: 3`">
+<svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg>
+</span>
+<template v-for="m in mw.nbrs">
+<button class="pop" @click="m.open" :aria-label="m.aria" :style="`position: absolute; left: ${m.left}; top: ${m.top}; transform: translate(-50%, -24px); z-index: 4; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: 0; padding: 0; cursor: pointer; max-width: 150px`">
+<span class="pav" :style="`width: 48px; height: 48px; border-radius: 50%; background: ${m.fill}; overflow: hidden; display: flex; box-shadow: 0 0 0 3px #FFFFFF, 0 4px 12px rgba(17, 24, 39, 0.15)`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<span style="font-size: 12.5px; font-weight: 600; line-height: 1.2; background: #FFFFFF; border: 1px solid #DCE3F5; padding: 2px 8px; border-radius: 999px; white-space: nowrap">{{m.name}}</span>
+<span style="font-size: 11.5px; line-height: 1.2; color: #374151; white-space: nowrap">{{m.why}}</span>
+</button>
+</template>
+</div>
+</div>
+</section>
+
+<main style="max-width: 1100px; margin: 0 auto; padding: 26px clamp(16px, 3vw, 32px) 64px">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 22px">
+<div style="min-width: 0; flex: 1 1 420px">
+<h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 34px; line-height: 1.1; letter-spacing: -0.02em">{{prof.name}}</h1>
+<p style="margin: 6px 0 10px; font-size: 18px; font-weight: 500">{{prof.headline}}</p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 14px; color: #4B5563">
+<span :style="`font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: ${prof.roleBg}; color: ${prof.roleFg}`">{{prof.yearLine}}</span>
+<span>{{prof.city}}</span>
+</div>
+<template v-if="prof.hasOpens">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px">
+<span style="font-size: 13px; font-weight: 600; color: #146C43">Open to</span>
+<template v-for="o in prof.opens">
+<span style="display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #E3F4EC; color: #146C43">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>{{o.label}}</span>
+</template>
+</div>
+</template>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<button @click="openProfThread" style="display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 20px; border-radius: 12px; border: 0; background: #2443C9; color: #FFFFFF; font-weight: 600; cursor: pointer">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10 14"></path><path d="M21 3l-7 18-4-7-7-4 18-7z"></path></svg>
+Message
+</button>
+<button @click="toggleSave" :aria-pressed="prof.saved" :style="`display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 12px; border: 1px solid #D5D9E2; background: #FFFFFF; font-weight: 600; cursor: pointer; color: ${prof.saveFg}`">
+<svg width="16" height="16" viewBox="0 0 24 24" :fill="prof.saveFill" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3z"></path></svg>
+{{prof.saveLabel}}
+</button>
+</div>
+</div>
+
+<section style="background: #FFFFFF; border: 1px solid #C9D3F3; border-radius: 18px; padding: 18px 22px; margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px">
+<div style="display: flex; flex-direction: column; gap: 8px; flex: 1 1 380px; min-width: 0">
+<h2 style="margin: 0; font-size: 12.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #1E3AA8">How you're connected</h2>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0">
+<template v-for="ph in prof.path">
+<template v-if="ph.arrow">
+<span style="display: inline-flex; flex-direction: column; align-items: center; padding: 0 6px; min-width: 34px">
+<span style="font-size: 10.5px; color: #4B5563; white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis">{{ph.via}}</span>
+<span style="width: 100%; border-top: 2px dashed #8EA2D6"></span>
+</span>
+</template>
+<span :style="`display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border-radius: 999px; background: ${ph.bg}`">
+<span :style="`width: 26px; height: 26px; border-radius: 50%; background: ${ph.fill}; overflow: hidden; display: flex`"><svg width="100%" height="100%" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.5" r="4.5" fill="#FFFFFF"></circle><ellipse cx="12" cy="24" rx="8.5" ry="7.5" fill="#FFFFFF"></ellipse></svg></span>
+<span style="font-size: 13.5px; font-weight: 600">{{ph.name}}</span>
+</span>
+</template>
+</div>
+<p style="margin: 0; font-size: 14px; color: #374151">{{prof.pathText}}</p>
+</div>
+<template v-if="prof.hasIntro">
+<button @click="askIntro" style="min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #2443C9; background: #FFFFFF; color: #2443C9; cursor: pointer; font-weight: 600">Ask {{prof.introName}} for an intro</button>
+</template>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+<article style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 22px 24px">
+<h2 style="margin: 0 0 12px; font-size: 18px">Posts &amp; mentions</h2>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<template v-for="pp in prof.posts">
+<button @click="pp.view" class="card" style="text-align: left; width: 100%; display: flex; gap: 14px; align-items: stretch; padding: 12px; border-radius: 14px; border: 1px solid #E3E5EA; background: #FFFFFF; cursor: pointer">
+<span aria-hidden="true" :style="`width: 76px; flex-shrink: 0; border-radius: 10px; background: ${pp.imgBg}; position: relative; overflow: hidden`"><span :style="`position: absolute; width: 46px; height: 46px; border-radius: 50%; background: ${pp.shapeA}; right: -12px; top: -12px; opacity: 0.8`"></span></span>
+<span style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+<span style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<span :style="`font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: ${pp.typeBg}; color: ${pp.typeFg}`">{{pp.typeLabel}}</span>
+<span style="font-size: 12.5px; color: #4B5563">{{pp.relation}} · {{pp.time}}</span>
+</span>
+<span style="font-weight: 600; font-size: 15px; line-height: 1.3">{{pp.title}}</span>
+<span style="font-size: 12.5px; color: #4B5563">{{pp.stats}}</span>
+</span>
+</button>
+</template>
+<template v-if="prof.noPosts">
+<p style="margin: 0; color: #4B5563; font-size: 14px">{{prof.first}} hasn't posted or been tagged yet.</p>
+</template>
+</div>
+</section>
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 22px 24px">
+<h2 style="margin: 0 0 10px; font-size: 18px">About</h2>
+<p style="margin: 0; font-size: 16px; line-height: 1.6">{{prof.bio}}</p>
+</section>
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 22px 24px">
+<h2 style="margin: 0 0 4px; font-size: 18px">Skills</h2>
+<p style="margin: 0 0 12px; font-size: 14px; color: #4B5563">Select a skill to find everyone else who has it.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<template v-for="k in prof.skillBtns">
+<button class="chipbtn" @click="k.run" style="min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid #D5D9E2; background: #F7F8FA; cursor: pointer; font-size: 14px; font-weight: 500">{{k.label}}</button>
+</template>
+</div>
+</section>
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 22px 24px">
+<h2 style="margin: 0 0 14px; font-size: 18px">Experience</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px">
+<template v-for="e in prof.exp">
+<li style="display: flex; gap: 14px; align-items: flex-start">
+<span style="width: 40px; height: 40px; border-radius: 10px; background: #F0F2F6; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; color: #4B5563; font-size: 14px">{{e.mono}}</span>
+<span style="display: flex; flex-direction: column">
+<span style="font-weight: 600">{{e.t}}</span>
+<span style="font-size: 14px">{{e.o}}</span>
+<span style="font-size: 13px; color: #4B5563">{{e.y}}</span>
+</span>
+</li>
+</template>
+</ul>
+</section>
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 22px 24px">
+<h2 style="margin: 0 0 10px; font-size: 18px">At Olin</h2>
+<p style="margin: 0 0 10px; font-size: 14px; color: #4B5563">{{prof.olinLine}}</p>
+<ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px">
+<template v-for="x in prof.olin">
+<li>{{x.label}}</li>
+</template>
+</ul>
+</section>
+</article>
+
+<aside style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<template v-if="showPrompt">
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 20px">
+<h2 style="margin: 0 0 8px; font-size: 17px">Reach out to {{prof.first}}</h2>
+<p style="margin: 0 0 14px; font-size: 14px; color: #4B5563">Send a short note, or ask someone you both know to introduce you. Email addresses stay private; replies go straight to your inbox.</p>
+<button @click="startCompose" style="width: 100%; min-height: 46px; border-radius: 12px; border: 0; background: #2443C9; color: #FFFFFF; font-weight: 600; cursor: pointer">Write a note</button>
+</section>
+</template>
+
+<template v-if="composing">
+<section style="background: #FFFFFF; border: 2px solid #2443C9; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<h2 style="margin: 0; font-size: 17px">Reach out to {{prof.first}}</h2>
+<button @click="cancelCompose" aria-label="Close" class="ghost" style="width: 40px; height: 40px; border-radius: 10px; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4B5563" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</button>
+</div>
+<template v-if="hasContext">
+<p style="margin: 0; font-size: 13px; background: #E8ECFB; color: #1E3AA8; border-radius: 10px; padding: 8px 10px">About their post: <strong>{{contextTitle}}</strong></p>
+</template>
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="font-size: 14px; font-weight: 600; margin-bottom: 8px; padding: 0">What's it about?</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<template v-for="r in reasons">
+<button @click="r.pick" :aria-pressed="r.on" :style="`min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid ${r.bd}; background: ${r.bg}; color: ${r.fg}; cursor: pointer; font-size: 13.5px; font-weight: 500`">{{r.label}}</button>
+</template>
+</div>
+</fieldset>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="font-size: 14px; font-weight: 600; margin-bottom: 8px; padding: 0">How</legend>
+<label style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid #E3E5EA; border-radius: 12px; cursor: pointer">
+<input type="radio" name="via" :checked="viaDirect" @change="pickDirect" style="margin: 3px 0 0; width: 17px; height: 17px">
+<span style="display: flex; flex-direction: column"><span style="font-weight: 600; font-size: 14px">Message {{prof.first}} directly</span><span style="font-size: 13px; color: #4B5563">Goes to their inbox from Oval.</span></span>
+</label>
+<template v-if="prof.hasIntro">
+<label style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid #E3E5EA; border-radius: 12px; cursor: pointer">
+<input type="radio" name="via" :checked="viaIntro" @change="pickIntro" style="margin: 3px 0 0; width: 17px; height: 17px">
+<span style="display: flex; flex-direction: column"><span style="font-weight: 600; font-size: 14px">Ask {{prof.introName}} for an intro</span><span style="font-size: 13px; color: #4B5563">You know them, and they know {{prof.first}}. They'll pass your note along with some context.</span></span>
+</label>
+</template>
+</fieldset>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="msg" style="font-size: 14px; font-weight: 600">Your note</label>
+<textarea id="msg" rows="6" :value="msg" @input="onMsg" placeholder="Pick a topic above to start from a draft, or write your own." style="border: 1px solid #C4CAD6; border-radius: 12px; padding: 12px; font-size: 14.5px; line-height: 1.5; resize: vertical"></textarea>
+</div>
+<button @click="send" :style="`min-height: 46px; border-radius: 12px; border: 0; background: ${sendBg}; color: #FFFFFF; font-weight: 600; cursor: pointer`">{{sendLabel}}</button>
+</section>
+</template>
+
+<template v-if="isSent">
+<section style="background: #E3F4EC; border: 1px solid #A7D9BF; border-radius: 18px; padding: 20px">
+<h2 style="margin: 0 0 6px; font-size: 17px; color: #0E4F31">{{sentTitle}}</h2>
+<p style="margin: 0 0 12px; font-size: 14px; color: #1F3B2D">{{sentBody}}</p>
+<button @click="openSentThread" style="min-height: 42px; padding: 0 14px; border-radius: 10px; border: 1px solid #146C43; background: #FFFFFF; color: #146C43; cursor: pointer; font-weight: 600">Open the conversation</button>
+</section>
+</template>
+
+<section style="background: #FFFFFF; border: 1px solid #E3E5EA; border-radius: 18px; padding: 20px">
+<h2 style="margin: 0 0 12px; font-size: 17px">What you have in common</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+<template v-for="x in prof.shared">
+<li style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2443C9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 3px"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+<span>{{x.label}}</span>
+</li>
+</template>
+</ul>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</template>
+</div>
+</script>
+<script>
+
+const { createApp, reactive, nextTick } = Vue;
+class DCLogic {
+  constructor(props){ this.props = props || {}; this.state = {}; }
+  setState(o){ const prev = Object.assign({}, this.state); Object.assign(this.state, typeof o === "function" ? o(this.state) : o); if (this.__refresh) this.__refresh(prev); }
+  forceUpdate(){ if (this.__refresh) this.__refresh(Object.assign({}, this.state)); }
+}
+
+
+var PEOPLE = [
+  {id:"maya", name:"Maya Okafor", role:"Alum", year:2014, major:"ECE", title:"Senior Hardware Engineer", org:"Apple", city:"Cupertino, CA", region:"Bay Area", industry:"Hardware",
+   skills:["PCB design","Analog circuits","Power electronics","Altium"], acts:["Olin Electric Motorsports"], orgs:["Apple","Analog Devices"], open:["Mentoring","Resume reviews"],
+   bio:"I design power and sensing boards for wearables. Happy to look over a schematic, or talk about getting into consumer hardware straight out of Olin.",
+   olin:["Olin Electric Motorsports, electrical lead","SCOPE: battery diagnostics for a utility sponsor"],
+   exp:[{t:"Senior Hardware Engineer",o:"Apple",y:"2019 to now"},{t:"Electrical Engineer",o:"Analog Devices",y:"2014 to 2019"}],
+   shared:["You were both on Olin Electric Motorsports"]},
+  {id:"daniel", name:"Daniel Reyes", role:"Alum", year:2011, major:"Mechanical Engineering", title:"Propulsion Lead", org:"SpaceX", city:"Hawthorne, CA", region:"Los Angeles", industry:"Aerospace",
+   skills:["Propulsion","Test engineering","FEA","CAD"], acts:["Olin Rocketry"], orgs:["SpaceX","Blue Origin"], open:["Coffee chats"],
+   bio:"I run engine test campaigns. Ask me about hot-fire testing, moving fast without breaking people, or what aerospace interviews actually look like.",
+   olin:["Olin Rocketry, co-founder","Teaching assistant for Mechanical Design"],
+   exp:[{t:"Propulsion Lead",o:"SpaceX",y:"2017 to now"},{t:"Test Engineer",o:"Blue Origin",y:"2011 to 2017"}],
+   shared:["You both did Olin Rocketry"]},
+  {id:"priya", name:"Priya Natarajan", role:"Alum", year:2017, major:"Robotics", title:"Robotics Software Engineer", org:"Boston Dynamics", city:"Waltham, MA", region:"Boston area", industry:"Robotics",
+   skills:["ROS","Motion planning","C++","Computer vision"], acts:["Olin Robotics Lab"], orgs:["Boston Dynamics","iRobot"], open:["Mentoring","Co-op referrals"],
+   bio:"I write perception and planning code for legged robots. I mentor a couple of Olin students each year and love talking about robotics co-ops.",
+   olin:["Olin Robotics Lab research assistant"],
+   exp:[{t:"Robotics Software Engineer",o:"Boston Dynamics",y:"2020 to now"},{t:"Software Engineer",o:"iRobot",y:"2017 to 2020"}],
+   shared:["You both took Principles of Engineering"]},
+  {id:"sam", name:"Sam Whitfield", role:"Student", year:2027, major:"E: Computing", title:"Computing senior, building tools for campus", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Software",
+   skills:["React","Machine learning","Python","Product design"], acts:["Software Design TA","Olin Hackathon"], orgs:["Microsoft"], open:[],
+   bio:"Senior. Last summer I interned on an Azure team. Always looking for people to build side projects with, especially anything with real users.",
+   olin:["Software Design teaching assistant","Olin Hackathon organizer"],
+   exp:[{t:"Software Engineering Intern",o:"Microsoft",y:"Summer 2026"}],
+   shared:["You're both current students","You both took Software Design"]},
+  {id:"elena", name:"Elena Vasquez", role:"Faculty", since:2008, major:"Electrical & Computer Engineering", title:"Professor of Electrical & Computer Engineering", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Education",
+   skills:["Signal processing","Embedded systems","FPGA"], acts:["Olin Rocketry"], orgs:["MathWorks"], open:["Mentoring"],
+   bio:"I teach signals and embedded systems and advise ECE students. Come by office hours to talk about research, co-ops, or grad school.",
+   olin:["Faculty advisor for Olin Rocketry"],
+   exp:[{t:"Professor of ECE",o:"Olin College",y:"2008 to now"},{t:"DSP Engineer",o:"MathWorks",y:"2002 to 2008"}],
+   shared:["She's your academic advisor"]},
+  {id:"jordan", name:"Jordan Park", role:"Alum", year:2019, major:"E: Design", title:"Product Designer", org:"IDEO", city:"San Francisco, CA", region:"Bay Area", industry:"Design",
+   skills:["UX research","Figma","Prototyping"], acts:["UOCD course assistant","Conductorless Orchestra"], orgs:["IDEO","Wayfair"], open:["Resume reviews","Coffee chats"],
+   bio:"I help teams figure out what to build before they build it. Happy to review a portfolio or talk about design careers for engineers.",
+   olin:["UOCD course assistant","Olin Conductorless Orchestra"],
+   exp:[{t:"Product Designer",o:"IDEO",y:"2021 to now"},{t:"UX Designer",o:"Wayfair",y:"2019 to 2021"}],
+   shared:["You both took UOCD"]},
+  {id:"aisha", name:"Aisha Bello", role:"Alum", year:2016, major:"E: Bioengineering", title:"Scientist, Process Development", org:"Moderna", city:"Cambridge, MA", region:"Boston area", industry:"Health & Bio",
+   skills:["Bioprocess","Lab automation","Data analysis"], acts:["Olin Dance"], orgs:["Moderna","Broad Institute"], open:["Coffee chats","Mentoring"],
+   bio:"I scale up manufacturing processes for vaccines. I talk with a lot of Oliners curious about biotech who aren't sure an engineering degree fits. It does.",
+   olin:["Bioengineering research in the Olin Biofab lab","Olin Dance"],
+   exp:[{t:"Scientist, Process Development",o:"Moderna",y:"2018 to now"},{t:"Research Associate",o:"Broad Institute",y:"2016 to 2018"}],
+   shared:["1 mutual connection: Zoe Patel"]},
+  {id:"chris", name:"Chris Lindqvist", role:"Alum", year:2011, major:"ECE", title:"Co-founder & CTO", org:"Fieldline Robotics", city:"Boston, MA", region:"Boston area", industry:"Robotics",
+   skills:["Computer vision","Embedded systems","Startups","Hiring"], acts:["Entrepreneurship Club","Olin Robotics Lab"], orgs:["Fieldline Robotics","iRobot"], open:["Co-op referrals","Coffee chats"],
+   bio:"We build vision systems for farm equipment. I hire Olin co-ops every year and I'm glad to talk startups, agtech, or turning a class project into a company.",
+   olin:["Founding member of the Entrepreneurship Club","Olin Robotics Lab"],
+   exp:[{t:"Co-founder & CTO",o:"Fieldline Robotics",y:"2016 to now"},{t:"Embedded Engineer",o:"iRobot",y:"2011 to 2016"}],
+   shared:["You both work on agtech computer vision"]},
+  {id:"hannah", name:"Hannah Cho", role:"Student", year:2028, major:"ECE", title:"ECE junior, avionics on Olin Rocketry", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Aerospace",
+   skills:["PCB design","Embedded C","FPGA","SystemVerilog"], acts:["Olin Rocketry"], orgs:[], open:[],
+   bio:"Junior. I design flight computer boards for Olin Rocketry and I'm looking for a hardware co-op next spring.",
+   olin:["Olin Rocketry, avionics lead"],
+   exp:[{t:"Avionics Lead",o:"Olin Rocketry",y:"2025 to now"}],
+   shared:["You're in the same class year","You're both in Olin Rocketry"]},
+  {id:"marcus", name:"Marcus Feld", role:"Staff", since:2015, major:"Postgraduate Planning", title:"Associate Director, Postgraduate Planning", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Education",
+   skills:["Career coaching","Resume review","Co-op search"], acts:["Student Government"], orgs:["Babson College"], open:["Resume reviews","Co-op referrals"],
+   bio:"I help students land internships, co-ops and first jobs, and I connect employers with Oliners. Book time with me for a resume pass or mock interview.",
+   olin:["Staff advisor to Student Government","Runs the fall career fair"],
+   exp:[{t:"Associate Director, Postgraduate Planning",o:"Olin College",y:"2015 to now"}],
+   shared:["You met at the fall career fair"]},
+  {id:"lena", name:"Lena Hoffmann", role:"Alum", year:2021, major:"Mechanical Engineering", title:"Manufacturing Engineer", org:"Tesla", city:"Austin, TX", region:"Austin", industry:"Automotive",
+   skills:["Design for manufacturing","Injection molding","SolidWorks"], acts:["Baja SAE","Shop Ninjas"], orgs:["Tesla","Formlabs"], open:["Coffee chats"],
+   bio:"I work on the battery pack line. If you're curious about manufacturing as a career, or about life in Austin after Needham, reach out.",
+   olin:["Baja SAE, frame lead","Shop ninja"],
+   exp:[{t:"Manufacturing Engineer",o:"Tesla",y:"2021 to now"},{t:"Manufacturing Intern",o:"Formlabs",y:"Summer 2020"}],
+   shared:["You were both shop ninjas"]},
+  {id:"tomas", name:"Tomás Alvarez", role:"Alum", year:2014, major:"E: Computing", title:"Staff Machine Learning Engineer", org:"Google", city:"New York, NY", region:"New York", industry:"Software",
+   skills:["Machine learning","Distributed systems","Python"], acts:["Software Design TA","Ultimate Frisbee"], orgs:["Google","Microsoft"], open:["Mentoring"],
+   bio:"I build ranking models for search. Happy to talk ML careers, grad school vs. industry, or review an ML project.",
+   olin:["Software Design course assistant","Olin Ultimate Frisbee"],
+   exp:[{t:"Staff ML Engineer",o:"Google",y:"2018 to now"},{t:"Software Engineer",o:"Microsoft",y:"2014 to 2018"}],
+   shared:["1 mutual connection: Leo Martins"]},
+  {id:"grace", name:"Grace Mbatha", role:"Alum", year:2019, major:"E: Sustainability", title:"Grid Integration Engineer", org:"Commonwealth Fusion Systems", city:"Devens, MA", region:"Boston area", industry:"Climate & Energy",
+   skills:["Power systems","Grid interconnection","Energy storage"], acts:["Sustainability Club"], orgs:["Commonwealth Fusion Systems","National Grid"], open:["Coffee chats"],
+   bio:"I work on connecting new power plants to the grid. Love talking climate careers and why interconnection queues are the bottleneck nobody talks about.",
+   olin:["Sustainability Club lead"],
+   exp:[{t:"Grid Integration Engineer",o:"Commonwealth Fusion Systems",y:"2022 to now"},{t:"Power Systems Engineer",o:"National Grid",y:"2019 to 2022"}],
+   shared:["You're both interested in grid interconnection"]},
+  {id:"ben", name:"Ben Adeyemi", role:"Faculty", since:2012, major:"Mechanical Engineering", title:"Associate Professor of Mechanical Engineering", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Education",
+   skills:["Robotics","Controls","Bio-inspired design"], acts:["Olin Robotics Lab"], orgs:["Harvard"], open:["Mentoring"],
+   bio:"My lab builds robots that move like animals. I'm always looking for research students who like building things and breaking them.",
+   olin:["Teaches Principles of Engineering","Directs the Olin Robotics Lab"],
+   exp:[{t:"Associate Professor of ME",o:"Olin College",y:"2012 to now"}],
+   shared:["You took his Principles of Engineering section"]},
+  {id:"riley", name:"Riley Santos", role:"Student", year:2027, major:"Mechanical Engineering", title:"MechE senior, Baja SAE captain", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Hardware",
+   skills:["SolidWorks","Machining","Composites"], acts:["Baja SAE","Shop Ninjas"], orgs:["Formlabs"], open:["Coffee chats"],
+   bio:"Senior. Did a co-op at Formlabs last spring and loved it. Ask me anything about the co-op process or Baja.",
+   olin:["Baja SAE, captain","Shop ninja"],
+   exp:[{t:"Mechanical Engineering Co-op",o:"Formlabs",y:"Spring 2026"}],
+   shared:["You're both current students"]},
+  {id:"nadia", name:"Nadia Rahman", role:"Alum", year:2016, major:"E: Computing", title:"Senior Product Manager", org:"Stripe", city:"Seattle, WA", region:"Seattle", industry:"Finance & VC",
+   skills:["Product management","SQL","Payments"], acts:["Student Government"], orgs:["Stripe","Amazon"], open:["Mentoring","Coffee chats"],
+   bio:"Engineer turned PM. I talk to a lot of Oliners about whether PM is right for them. Short answer: if you like users more than you like code, maybe.",
+   olin:["Student Government, treasurer"],
+   exp:[{t:"Senior Product Manager",o:"Stripe",y:"2020 to now"},{t:"Software Engineer",o:"Amazon",y:"2016 to 2020"}],
+   shared:["You were both in Student Government"]},
+  {id:"ethan", name:"Ethan Brooks", role:"Alum", year:2012, major:"Mechanical Engineering", title:"Partner", org:"Northgate Ventures", city:"Boston, MA", region:"Boston area", industry:"Finance & VC",
+   skills:["Venture capital","Hardware startups","Fundraising"], acts:["Olin Electric Motorsports","Entrepreneurship Club"], orgs:["Northgate Ventures","Torqline"], open:["Coffee chats"],
+   bio:"I invest in early hardware and climate companies. Glad to give honest feedback on a pitch, especially from Oliners.",
+   olin:["Olin Electric Motorsports","Entrepreneurship Club"],
+   exp:[{t:"Partner",o:"Northgate Ventures",y:"2019 to now"},{t:"Founder",o:"Torqline (acquired)",y:"2013 to 2019"}],
+   shared:["You were both on Olin Electric Motorsports"]},
+  {id:"sofia", name:"Sofia Marchetti", role:"Alum", year:2021, major:"ECE", title:"RF Engineer", org:"MIT Lincoln Laboratory", city:"Lexington, MA", region:"Boston area", industry:"Aerospace",
+   skills:["RF design","Antennas","Radar","MATLAB"], acts:["Olin Rocketry"], orgs:["MIT Lincoln Laboratory"], open:["Co-op referrals","Coffee chats"],
+   bio:"I design antennas and RF front ends for radar systems. Happy to talk about national labs and what RF work is really like.",
+   olin:["Olin Rocketry, telemetry"],
+   exp:[{t:"RF Engineer",o:"MIT Lincoln Laboratory",y:"2021 to now"}],
+   shared:["You both did Olin Rocketry"]},
+  {id:"kai", name:"Kai Nakamura", role:"Alum", year:2022, major:"Robotics", title:"Autonomy Engineer", org:"Zipline", city:"South San Francisco, CA", region:"Bay Area", industry:"Robotics",
+   skills:["Drones","State estimation","C++"], acts:["Olin Robotics Lab"], orgs:["Zipline","Skydio"], open:["Coffee chats"],
+   bio:"I work on autonomy for delivery drones. If you're building anything that flies, I want to hear about it.",
+   olin:["Olin Robotics Lab, aerial robotics"],
+   exp:[{t:"Autonomy Engineer",o:"Zipline",y:"2022 to now"}],
+   shared:["You're both building drones"]},
+  {id:"rebecca", name:"Rebecca Lowe", role:"Staff", since:2011, major:"Machine Shop", title:"Machine Shop Manager", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Education",
+   skills:["Machining","CNC","Welding","Fabrication"], acts:["Shop Ninjas"], orgs:["General Dynamics"], open:["Mentoring"],
+   bio:"I run the shop and train the shop ninjas. If you want to make something real, come talk to me before you order parts.",
+   olin:["Trains the shop ninjas"],
+   exp:[{t:"Machine Shop Manager",o:"Olin College",y:"2011 to now"}],
+   shared:["You've been through her shop training"]},
+  {id:"omar", name:"Omar Haddad", role:"Alum", year:2012, major:"ECE", title:"Engineering Manager, Firmware", org:"iRobot", city:"Bedford, MA", region:"Boston area", industry:"Robotics",
+   skills:["Engineering management","Firmware","Embedded systems"], acts:["Olin Robotics Lab"], orgs:["iRobot"], open:["Co-op referrals","Resume reviews"],
+   bio:"I lead a firmware team and hire interns every summer. I'm glad to do mock interviews for embedded roles.",
+   olin:["Olin Robotics Lab","ECE course assistant"],
+   exp:[{t:"Engineering Manager, Firmware",o:"iRobot",y:"2018 to now"},{t:"Firmware Engineer",o:"iRobot",y:"2012 to 2018"}],
+   shared:["You're both ECE"]},
+  {id:"zoe", name:"Zoe Patel", role:"Student", year:2027, major:"E: Bioengineering", title:"Bioengineering senior, biomechanics research", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Health & Bio",
+   skills:["Biomechanics","MATLAB","Wet lab"], acts:["Olin Dance","Student Government"], orgs:["Boston Children's Hospital"], open:[],
+   bio:"Senior. I do gait research and I'm figuring out whether to go to grad school or industry. Happy to swap notes with anyone in the same boat.",
+   olin:["Biomechanics research assistant","Olin Dance"],
+   exp:[{t:"Research Assistant",o:"Olin College",y:"2025 to now"},{t:"Lab Intern",o:"Boston Children's Hospital",y:"Summer 2026"}],
+   shared:["You're both current students"]},
+  {id:"isaac", name:"Isaac Turner", role:"Alum", year:2024, major:"ECE", title:"Firmware Engineer", org:"Rivian", city:"Palo Alto, CA", region:"Bay Area", industry:"Automotive",
+   skills:["Embedded C","CAN bus","RTOS","Firmware"], acts:["Olin Electric Motorsports"], orgs:["Rivian","Bose"], open:["Resume reviews","Coffee chats"],
+   bio:"Two years out. I write firmware for vehicle controllers. I remember the new-grad search well, so ask me anything about it.",
+   olin:["Olin Electric Motorsports, firmware"],
+   exp:[{t:"Firmware Engineer",o:"Rivian",y:"2024 to now"},{t:"Embedded Intern",o:"Bose",y:"Summer 2023"}],
+   shared:["You were both on Olin Electric Motorsports"]},
+  {id:"mira", name:"Mira Sato", role:"Faculty", since:2010, major:"Design", title:"Professor of Design & Entrepreneurship", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Education",
+   skills:["Human-centered design","Entrepreneurship","Product design"], acts:["UOCD course assistant","Entrepreneurship Club"], orgs:["frog design"], open:["Mentoring"],
+   bio:"I teach design and venture courses. I love helping students turn something they noticed into something people use.",
+   olin:["Teaches UOCD","Faculty advisor to the Entrepreneurship Club"],
+   exp:[{t:"Professor of Design & Entrepreneurship",o:"Olin College",y:"2010 to now"},{t:"Design Lead",o:"frog design",y:"2004 to 2010"}],
+   shared:["You took her UOCD section"]},
+  {id:"leo", name:"Leo Martins", role:"Student", year:2028, major:"E: Computing", title:"Computing junior, audio software", org:"Olin College", city:"Needham, MA", region:"Boston area", industry:"Software",
+   skills:["Python","Audio DSP","Embedded C"], acts:["Olin Hackathon","Ultimate Frisbee"], orgs:["Bose"], open:[],
+   bio:"Junior. Interned at Bose last summer on headphone firmware. I'm into anything where software meets sound.",
+   olin:["Olin Hackathon, sponsorship lead","Olin Ultimate Frisbee"],
+   exp:[{t:"Software Intern",o:"Bose",y:"Summer 2026"}],
+   shared:["You're in the same class year"]},
+  {id:"ava", name:"Ava Lindgren", role:"Alum", year:2024, major:"E: Design", title:"UX Designer", org:"Wayfair", city:"Boston, MA", region:"Boston area", industry:"Design",
+   skills:["Figma","UX research","Design systems"], acts:["Conductorless Orchestra","Olin Dance"], orgs:["Wayfair"], open:["Coffee chats","Resume reviews"],
+   bio:"I design the checkout experience. Two years out, still in Boston, and always happy to grab coffee with a student thinking about design.",
+   olin:["Olin Conductorless Orchestra","Olin Dance"],
+   exp:[{t:"UX Designer",o:"Wayfair",y:"2024 to now"}],
+   shared:["You were both in Olin Dance"]}
+];
+var ORG = { id:"olin", name:"Olin News", line:"Official updates from the college" };
+
+/* Two fictional signed-in viewers, so reviewers can preview the student and alum experience. */
+var VIEWER_DEFS = {
+  student: { key:"student", tag:"Student '28", year:2028, acts:["Olin Rocketry","Olin Electric Motorsports"], orgs:[], follows:["Olin Rocketry","Olin Electric Motorsports"] },
+  alum: { key:"alum", tag:"Alum '14", year:2014, acts:["Olin Electric Motorsports","Olin Robotics Lab"], orgs:["Analog Devices"], follows:["Olin Electric Motorsports","Olin Robotics Lab"] }
+};
+var CONVOS = {
+  student: { order:["sofia","hannah","marcus"], threads:{
+    sofia:{subject:"Lincoln Lab co-op chat", unread:true, replied:true, list:[
+      {from:"me", time:"Tue", text:"Hi Sofia, I'm a junior on Olin Rocketry and saw you're open to co-op referrals. Would you have 15 minutes to talk about Lincoln Lab?"},
+      {from:"them", time:"1h", text:"Of course! Thursday after 4 works for me. I'll send a calendar invite. Bring questions about the RF group, they're hiring this spring."}]},
+    hannah:{subject:"Test launch Saturday", unread:true, replied:true, list:[
+      {from:"them", time:"Mon", text:"Are you coming to the test launch Saturday?"},
+      {from:"me", time:"Mon", text:"Yes! I'll bring the spare altimeter."},
+      {from:"them", time:"3h", text:"Perfect. Prof. Vasquez wants to see the flight data afterwards."}]},
+    marcus:{subject:"Resume feedback", unread:false, replied:true, list:[
+      {from:"them", time:"Oct 12", text:"Your resume looks great. One tip: lead each bullet with the result, then how you got there."},
+      {from:"me", time:"Oct 12", text:"Thank you, updating it tonight."}]}
+  }},
+  alum: { order:["hannah","isaac","maya"], threads:{
+    hannah:{subject:"Resume help for a hardware co-op?", unread:true, replied:true, list:[
+      {kind:"note", text:"Hannah found you through Olin Electric Motorsports alumni"},
+      {from:"them", time:"2h", text:"Hi! I'm a junior doing avionics for Olin Rocketry and looking for a hardware co-op this spring. Would you be willing to look at my resume? No worries if you're busy."}]},
+    isaac:{subject:"3rd at nationals!", unread:false, replied:true, list:[
+      {from:"them", time:"Sun", text:"Did you see the team took 3rd at nationals?!"},
+      {from:"me", time:"Sun", text:"Incredible. A decade of battery pack lessons finally paid off."}]},
+    maya:{subject:"Alumni Weekend dinner", unread:false, replied:true, list:[
+      {from:"me", time:"Oct 9", text:"Coming back for Alumni Weekend?"},
+      {from:"them", time:"Oct 9", text:"Wouldn't miss it. Let's grab dinner with the old Motorsports crew."}]}
+  }}
+};
+var QUICK = ["Congrats!", "Could we find 20 minutes to chat?", "Thank you so much!"];
+var REPLIES = ["Thanks for reaching out! Happy to help. Does sometime next week work for a quick call?",
+  "Great to hear from a fellow Oliner. Send me a couple of times that work for you.",
+  "Love this. Let's set up a time to talk."];
+function cloneM(M){
+  var t = {};
+  Object.keys(M.threads).forEach(function(k){ var x = M.threads[k]; t[k] = {subject: x.subject, list: x.list.slice(), unread: x.unread, replied: x.replied}; });
+  return {order: M.order.slice(), threads: t};
+}
+var ASKS = { hannah:"Looking for a hardware co-op next spring", zoe:"Deciding between grad school and industry", leo:"Looking for audio or embedded internships" };
+
+var POSTS = [
+  {id:"p1", group:"Olin Rocketry", type:"project", author:"hannah", time:"3h", title:"Our homemade flight computer survived 40 g on its first launch",
+   body:"Two semesters and four board revisions later, Olin Rocketry's in-house avionics board flew on Saturday. It logged every sensor through peak acceleration and fired the parachute right on time. Thank you to Prof. Vasquez for the late-night debugging and to Sofia for reviewing our radio design.",
+   tags:["elena","sofia"], img:"Launch day with Olin Rocketry", bg:"#E3F4EC", a:"#A7E3C6", b:"#C9D3F3",
+   react:{congrats:48, cool:71, inspiring:12},
+   comments:[{who:"daniel", text:"40 g! We would have killed for this board back in 2010. Send me the data plots.", replies:[{who:"hannah", text:"Sending them tonight!"}]},
+             {who:"maya", text:"Really clean layout. Happy to review the next revision if you want another set of eyes.", replies:[]}]},
+  {id:"p2", group:"Entrepreneurship Club", type:"startup", author:"chris", time:"1d", title:"Fieldline Robotics raised our Series A",
+   body:"We put vision systems on farm equipment across the Northeast, and we just closed our Series A, led by fellow Oliner Ethan Brooks at Northgate Ventures. Three of our first ten hires came from Olin. We're hiring two more co-ops for the spring.",
+   tags:["ethan"], img:"The Fieldline team at a partner farm", bg:"#FDE7E1", a:"#F8B9A6", b:"#C9D3F3",
+   react:{congrats:132, cool:28, inspiring:31}, reachLabel:"Ask about co-ops",
+   comments:[{who:"marcus", text:"I'll share the co-op roles with students this week.", replies:[{who:"chris", text:"Thank you, Marcus!"}]}]},
+  {id:"p3", group:"", type:"news", author:"olin", time:"1d", title:"The new fabrication wing opens Monday",
+   body:"Two new CNC mills, a waterjet cutter, and a dedicated electronics assembly room. Shop training sessions start the same week and are open to every student.",
+   tags:["rebecca"], img:"Inside the new fabrication wing", bg:"#E8ECFB", a:"#B9C6EA", b:"#FFFFFF",
+   react:{congrats:15, cool:94, inspiring:8},
+   comments:[{who:"rebecca", text:"Sign-ups for training go live Friday. Come say hi.", replies:[]}]},
+  {id:"p4", group:"Sustainability Club", type:"award", author:"grace", time:"2d", title:"I was named a Clean Energy Fellow",
+   body:"The fellowship backs a year of work on making it faster to connect new clean power to the grid. Projects in my Olin sustainability classes are the reason I fell in love with this problem.",
+   tags:[], img:"Fellowship announcement", bg:"#FDEFD9", a:"#F6CF8F", b:"#FFFFFF",
+   react:{congrats:156, cool:12, inspiring:44}, comments:[]},
+  {id:"p5", group:"Olin Hackathon", type:"project", author:"sam", time:"3d", title:"I built a course planner that 300 Oliners now use",
+   body:"It started as a weekend hack because I kept double-booking labs. Now it checks prerequisites, flags time conflicts, and suggests courses based on what students like you took. Leo built the scheduling engine.",
+   tags:["leo"], img:"Screens from the course planner", bg:"#F1E8FB", a:"#D5BFF3", b:"#FFFFFF",
+   react:{congrats:40, cool:88, inspiring:19},
+   comments:[{who:"tomas", text:"This is great. If you ever want to talk about recommendation models, ping me.", replies:[]}]},
+  {id:"p6", group:"Olin Electric Motorsports", type:"award", author:"isaac", time:"4d", title:"Olin Electric Motorsports took 3rd at nationals",
+   body:"Proud alum moment. The team placed 3rd overall at this year's national electric race car competition, the best finish in club history. The battery pack design came straight from lessons the team has passed down for a decade.",
+   tags:["maya","ethan"], img:"The car crossing the finish line", bg:"#FDEFD9", a:"#F6CF8F", b:"#C9D3F3",
+   react:{congrats:210, cool:66, inspiring:21},
+   comments:[{who:"maya", text:"Ten years of wiring harness pain, finally paid off.", replies:[]}]},
+  {id:"p7", group:"", type:"event", author:"olin", time:"5d", title:"Alumni Weekend: Oliners from every class are coming back",
+   body:"Talks from alumni founders, a student project showcase, and the annual alumni versus students soccer match. Everyone in the community is welcome.",
+   tags:[], img:"Last year's project showcase", bg:"#F1E8FB", a:"#D5BFF3", b:"#C9D3F3",
+   event:{when:"Sat, Nov 14", where:"Olin campus"},
+   react:{congrats:5, cool:52, inspiring:9}, comments:[]},
+  {id:"p8", group:"Olin Robotics Lab", type:"award", author:"ben", time:"1w", title:"Our gecko-inspired climbing robot made a journal cover",
+   body:"Three years of work by students in the robotics lab. The robot climbs glass using adhesive pads modeled on gecko feet. Kai and Priya both worked on early prototypes as students.",
+   tags:["kai","priya"], img:"The climbing robot on a glass wall", bg:"#E3F4EC", a:"#A7E3C6", b:"#FFFFFF",
+   react:{congrats:98, cool:120, inspiring:40}, comments:[]}
+];
+
+var TYPES = {
+  project:{label:"Project", tab:"Projects", bg:"#E3F4EC", fg:"#146C43", dot:"#0F9D6B"},
+  award:{label:"Win", tab:"Wins & awards", bg:"#FDEFD9", fg:"#8A4B08", dot:"#D97706"},
+  startup:{label:"Startup", tab:"Startups", bg:"#FDE7E1", fg:"#9A3412", dot:"#EA580C"},
+  event:{label:"Event", tab:"Events", bg:"#F1E8FB", fg:"#6B2FA3", dot:"#7C3AED"},
+  news:{label:"School news", tab:"School news", bg:"#E8ECFB", fg:"#1E3AA8", dot:"#2443C9"}
+};
+var TYPE_ORDER = ["project","award","startup","event","news"];
+var ROLE = {
+  Alum:{tag:"Alum", label:"Alumni", fill:"#2443C9", bg:"#E8ECFB", fg:"#1E3AA8"},
+  Student:{tag:"Student", label:"Students", fill:"#0F9D6B", bg:"#E3F4EC", fg:"#146C43"},
+  Faculty:{tag:"Faculty", label:"Faculty", fill:"#D97706", bg:"#FDEFD9", fg:"#8A4B08"},
+  Staff:{tag:"Staff", label:"Staff", fill:"#7C3AED", bg:"#F1E8FB", fg:"#6B2FA3"}
+};
+var RX = [
+  {key:"congrats", label:"Congrats", icon:"M3 21l4-12 8 8-12 4zM14 4l1 3M19 6l-2 2M20 11l-3-.5"},
+  {key:"cool", label:"So cool", icon:"M12 2.5l2.2 6.3 6.3 2.2-6.3 2.2L12 19.5l-2.2-6.3L3.5 11l6.3-2.2z"},
+  {key:"inspiring", label:"Inspiring", icon:"M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"}
+];
+var REASONS = ["Congrats","Career advice","Co-op or internship","Project collaboration","Just saying hi"];
+var HELPERS = ["sofia","omar","isaac"];
+
+function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+var R = rng(20261020);
+function r1(v){ return Math.round(v * 10) / 10; }
+function circ(x, y, r){ return "M" + r1(x - r) + " " + r1(y) + "a" + r + " " + r + " 0 1 0 " + r1(2*r) + " 0a" + r + " " + r + " 0 1 0 " + r1(-2*r) + " 0"; }
+
+var IDX = {};
+PEOPLE.forEach(function(p, i){ IDX[p.id] = i; });
+function person(id){ return PEOPLE[IDX[id]]; }
+
+function reasonsBetween(a, b){
+  var r = [];
+  a.orgs.forEach(function(o){ if (b.orgs.indexOf(o) >= 0) r.push({type:"company", label:o}); });
+  a.acts.forEach(function(o){ if (b.acts.indexOf(o) >= 0) r.push({type:"activity", label:o}); });
+  if (a.year && b.year && a.year === b.year) r.push({type:"class", label:"Class of " + a.year});
+  return r;
+}
+var EDGES = [];
+var ADJ = PEOPLE.map(function(){ return []; });
+(function(){
+  for (var i = 0; i < PEOPLE.length; i++) for (var j = i + 1; j < PEOPLE.length; j++){
+    var r = reasonsBetween(PEOPLE[i], PEOPLE[j]);
+    if (r.length){ var e = {a:i, b:j, r:r, t:r[0].type}; EDGES.push(e); ADJ[i].push({o:j, e:e}); ADJ[j].push({o:i, e:e}); }
+  }
+})();
+function buildViewer(YOU){
+  var DIST = PEOPLE.map(function(){ return 99; }), PARENT = PEOPLE.map(function(){ return null; }), YOU_R = PEOPLE.map(function(){ return null; });
+  var queue = [];
+  PEOPLE.forEach(function(p, i){ var r = reasonsBetween(YOU, p); if (r.length){ DIST[i] = 1; YOU_R[i] = r; queue.push(i); } });
+  while (queue.length){
+    var qi = queue.shift();
+    ADJ[qi].forEach(function(n){ if (DIST[n.o] === 99){ DIST[n.o] = DIST[qi] + 1; PARENT[n.o] = {i:qi, e:n.e}; queue.push(n.o); } });
+  }
+  var NEAR = PEOPLE.map(function(p, i){ return i; }).filter(function(i){ return DIST[i] === 1; });
+  var REACHABLE = PEOPLE.filter(function(p, i){ return DIST[i] < 99; }).length;
+  var cx = 150, cy = 118, out = {classP:"", activityP:"", companyP:"", pts:[], dots:""};
+  NEAR.forEach(function(i, k){
+    var ang = -Math.PI / 2 + (k + 0.5) * 2 * Math.PI / NEAR.length;
+    var x = Math.round(cx + 104 * Math.cos(ang)), y = Math.round(cy + 82 * Math.sin(ang));
+    out[YOU_R[i][0].type + "P"] += "M" + cx + " " + cy + "L" + x + " " + y;
+    out.pts.push({i:i, x:x, y:y});
+  });
+  for (var k2 = 0; k2 < 46; k2++){
+    var a = R() * 2 * Math.PI, rx = 128 + R() * 30, ry = 104 + R() * 20;
+    var x2 = cx + rx * Math.cos(a), y2 = cy + ry * Math.sin(a);
+    if (x2 > 4 && x2 < 296 && y2 > 4 && y2 < 246) out.dots += circ(x2, y2, r1(1.4 + R() * 2));
+  }
+  return {def:YOU, DIST:DIST, PARENT:PARENT, YOU_R:YOU_R, NEAR:NEAR, REACHABLE:REACHABLE, CORNER:out};
+}
+var VIEWERS = {student: buildViewer(VIEWER_DEFS.student), alum: buildViewer(VIEWER_DEFS.alum)};
+function chainTo(V, i){ var c = [i], cur = i; while (V.PARENT[cur]){ cur = V.PARENT[cur].i; c.unshift(cur); } return c; }
+var MINI_DOTS = (function(){
+  var s = "";
+  for (var k = 0; k < 110; k++){ s += circ(R()*1000, 10 + R()*280, r1(1.4 + R()*2.4)); }
+  return s;
+})();
+
+function first(n){ return n.split(" ")[0]; }
+function yy(y){ return "'" + String(y).slice(2); }
+function displayName(p){ return p.role === "Faculty" ? "Prof. " + p.name : p.name; }
+function shortName(p){ return p.role === "Faculty" ? "Prof. " + p.name.split(" ").slice(-1)[0] : first(p.name); }
+function decorate(p){
+  var t = ROLE[p.role];
+  return { id:p.id, name: displayName(p), first: first(p.name), fill: t.fill, roleBg: t.bg, roleFg: t.fg,
+    tag: p.year ? t.tag + " " + yy(p.year) : t.tag,
+    yearLine: p.year ? t.tag + " · Class of " + yy(p.year) + " · " + p.major : p.role + " · since " + p.since,
+    headline: p.role === "Alum" ? p.title + " at " + p.org : p.title, city: p.city,
+    opens: p.open.map(function(o){ return {label:o}; }), hasOpens: p.open.length > 0 };
+}
+function youShare(r){
+  var x = r[0];
+  if (x.type === "activity") return "both in " + x.label;
+  if (x.type === "class") return "both in the class of " + x.label.slice(-4);
+  return "both worked at " + x.label;
+}
+function fieldsOf(p){
+  var f = [];
+  f.push([p.name, 10, "Name match"]);
+  p.skills.forEach(function(k){ f.push([k, 8, "Skill: " + k]); });
+  f.push([p.org, 7, (p.role === "Alum" ? "Works at " : "At ") + p.org]);
+  p.orgs.forEach(function(o){ f.push([o, 6, "Worked at " + o]); });
+  p.acts.forEach(function(a){ f.push([a, 6, "Activity: " + a]); });
+  p.open.forEach(function(o){ f.push([o, 5, "Open to " + o.toLowerCase()]); });
+  if (p.year) f.push(["Class of " + p.year, 6, "Class of " + p.year]);
+  f.push([p.title, 5, "Role: " + p.title]);
+  f.push([p.industry, 4, "Industry: " + p.industry]);
+  f.push([p.city + " " + p.region, 4, "Based in " + p.city]);
+  f.push([p.major, 3, "Studied " + p.major]);
+  p.olin.forEach(function(o){ f.push([o, 3, "At Olin: " + o]); });
+  f.push([p.bio, 1, "Mentioned in their About"]);
+  return f;
+}
+function matchPerson(p, q){
+  if (!q) return {score:0, why:""};
+  var f = fieldsOf(p), score = 0, best = null;
+  f.forEach(function(x){ if (x[0].toLowerCase().indexOf(q) >= 0){ score += x[1]; if (!best || x[1] > best.w) best = {w:x[1], why:x[2]}; } });
+  if (!score){
+    var toks = q.split(/\s+/).filter(Boolean), ok = true;
+    toks.forEach(function(t){
+      var hit = false;
+      f.forEach(function(x){ if (x[0].toLowerCase().indexOf(t) >= 0){ score += x[1]/2; hit = true; if (!best || x[1] > best.w) best = {w:x[1], why:x[2]}; } });
+      if (!hit) ok = false;
+    });
+    if (!ok) return null;
+  }
+  return {score:score, why: best ? best.why : ""};
+}
+function draft(reason, p, post){
+  var f = first(p.name), sk = p.skills[0].toLowerCase();
+  if (reason === "Congrats") return "Hi " + f + ", I saw " + (post ? "your post, “" + post.title + ",”" : "your news") + " on Oval. Congratulations, that's a big deal. I'd love to hear how it came together sometime.";
+  if (reason === "Career advice") return "Hi " + f + ", I'm an Olin student and found you on Oval. I'd love to hear how you got to where you are now. Would you be up for a 20 minute call in the next few weeks?";
+  if (reason === "Co-op or internship") return "Hi " + f + ", I'm an Olin student looking for a co-op working on " + sk + ". Would you be open to a quick chat about whether there might be a fit?";
+  if (reason === "Project collaboration") return "Hi " + f + ", I'm working on a project that leans on " + sk + ". Would you be open to trading notes for 15 minutes?";
+  return "Hi " + f + ", fellow Oliner here. Saw your profile on Oval and wanted to say hi.";
+}
+function whoOf(id, V){
+  if (id === "you") return {name:"You", tag:V.def.tag, fill:"#111827"};
+  var d = decorate(person(id));
+  return {name: d.name, tag: d.tag, fill: d.fill};
+}
+function postLink(V, p){
+  var DIST = V.DIST, involved = (p.author === "olin" ? [] : [p.author]).concat(p.tags);
+  var best = null;
+  involved.forEach(function(id){ var i = IDX[id]; if (best === null || DIST[i] < DIST[best]) best = i; });
+  if (best === null || DIST[best] >= 99) return null;
+  var P = PEOPLE[best], role = P.id === p.author ? "posted this" : "is tagged here";
+  var nm = displayName(P);
+  if (DIST[best] === 1) return { chain:[{fill:"#111827", dash:false},{fill:ROLE[P.role].fill, dash:true}],
+    text: "You and " + nm + " are " + youShare(V.YOU_R[best]) + ". " + first(P.name) + " " + role + "." };
+  var c = chainTo(V, best), mid = PEOPLE[c[0]];
+  if (DIST[best] === 2) return { chain:[{fill:"#111827", dash:false},{fill:ROLE[mid.role].fill, dash:true},{fill:ROLE[P.role].fill, dash:true}],
+    text: nm + " " + role + ". You know them through " + displayName(mid) + "." };
+  return { chain:[{fill:"#111827", dash:false},{fill:"#B9C6EA", dash:true},{fill:ROLE[P.role].fill, dash:true}],
+    text: nm + " " + role + ", " + DIST[best] + " steps from you, starting with " + displayName(mid) + "." };
+}
+
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.state = { as:"student", view:"home", feed:"all", ftype:"all", fgroup:"all", q:"", role:"All", ind:"", loc:"", openF:"", onlySaved:false,
+      reacted:{}, openC:{p1:true}, added:{}, drafts:{}, replyTo:{}, going:{},
+      sel:"maya", ctxPost:null, prevView:"home", saved:{}, sent:{}, composing:false, reason:null, via:"direct", msg:"",
+      msgs:{student: cloneM(CONVOS.student), alum: cloneM(CONVOS.alum)}, thread:{student:"sofia", alum:"hannah"}, chat:"", typing:{}, mq:"", mtab:"all", newOpen:false, toQ:"" };
+    this.timers = [];
+  }
+  componentWillUnmount(){ this.timers.forEach(function(t){ clearTimeout(t); }); }
+  updM(v, fn){
+    var all = Object.assign({}, this.state.msgs), M = cloneM(all[v]);
+    fn(M); all[v] = M;
+    this.setState({msgs: all});
+  }
+  ensure(M, id, subject){ if (!M.threads[id]){ M.threads[id] = {subject: subject || "New conversation", list:[], unread:false, replied:false}; M.order.unshift(id); } else if (subject && M.threads[id].list.length === 0) M.threads[id].subject = subject; }
+  bump(M, id){ M.order = [id].concat(M.order.filter(function(x){ return x !== id; })); }
+  openThread(id){
+    var v = this.state.as;
+    var self0 = this; this.updM(v, function(M){ self0.ensure(M, id); M.threads[id].unread = false; });
+    var th = Object.assign({}, this.state.thread); th[v] = id;
+    this.setState({view:"msgs", thread: th, chat:"", newOpen:false, toQ:""});
+  }
+  pushMsg(v, id, items, replyText, subject){
+    var self = this;
+    this.updM(v, function(M){ self.ensure(M, id, subject); var th0 = M.threads[id]; if (th0.subject === "New conversation"){ var f0 = items.filter(function(m){ return m.from === "me"; })[0]; if (f0) th0.subject = f0.text.length > 48 ? f0.text.slice(0, 46).replace(/\s+\S*$/, "") + "…" : f0.text; } items.forEach(function(m){ M.threads[id].list.push(m); }); self.bump(M, id); });
+    var t = this.state.msgs[v].threads[id];
+    if (!t || !t.replied || replyText){
+      var self2 = this, key = v + ":" + id;
+      this.timers.push(setTimeout(function(){ var ty = Object.assign({}, self2.state.typing); ty[key] = true; self2.setState({typing: ty}); }, 700));
+      this.timers.push(setTimeout(function(){
+        var ty = Object.assign({}, self2.state.typing); ty[key] = false;
+        self2.updM(v, function(M){ self2.ensure(M, id); var th = M.threads[id]; th.list.push({from:"them", time:"now", text: replyText || REPLIES[id.length % REPLIES.length]}); th.replied = true; th.unread = !(self2.state.view === "msgs" && self2.state.thread[v] === id); self2.bump(M, id); });
+        self2.setState({typing: ty});
+      }, 2600));
+    }
+  }
+  componentDidUpdate(prev, ps){
+    if (ps && (ps.view !== this.state.view || ps.sel !== this.state.sel)){ try { window.scrollTo(0, 0); } catch (e) {} }
+    try { var el = document.getElementById("msgScroll"); if (el) el.scrollTop = el.scrollHeight; } catch (e2) {}
+  }
+  open(id, compose, post, intro){
+    if (id === "olin") return;
+    var p = person(id), reason = compose ? (post ? "Congrats" : null) : null;
+    this.setState({view:"profile", prevView: this.state.view === "profile" ? this.state.prevView : this.state.view, sel:id, composing:!!compose,
+      ctxPost: post ? post.id : null, reason: reason, via: intro ? "intro" : "direct", msg: reason ? draft(reason, p, post) : ""});
+  }
+  renderVals(){
+    var self = this, s = this.state;
+    var q = (s.q || "").trim().toLowerCase();
+
+    /* Feed */
+    var V = VIEWERS[s.as], isAlum = s.as === "alum", follows = V.def.follows;
+    var tabDefs = [{key:"all", label:"Everything", dot:"#9CA3AF"}]
+      .concat(TYPE_ORDER.map(function(k){ return {key:k, label:TYPES[k].tab, dot:TYPES[k].dot}; }));
+    function inTab(p){ return (s.ftype === "all" || p.type === s.ftype) && (s.fgroup === "all" || p.group === s.fgroup); }
+    function rank(p){ if (!isAlum) return 0; if (p.author === "olin") return 0; if (follows.indexOf(p.group) >= 0) return 1; return 2; }
+    var ordered = POSTS.map(function(p, k){ return {p:p, k:k}; }).sort(function(a, b){ return (rank(a.p) - rank(b.p)) || (a.k - b.k); }).map(function(x){ return x.p; });
+    var feedTabs = tabDefs.map(function(t){
+      var on = s.feed === t.key;
+      return { label:t.label, on:on, dot:t.dot, count: POSTS.filter(function(p){ return inTab(p, t.key); }).length,
+        bg: on ? "#E8ECFB" : "transparent", fg: on ? "#1E3AA8" : "#111827", pick: function(){ self.setState({feed: t.key}); } };
+    });
+    var posts = ordered.filter(function(p){ return inTab(p); }).map(function(p){
+      var T = TYPES[p.type], isOrg = p.author === "olin";
+      var A = isOrg ? null : person(p.author), Ad = A ? decorate(A) : null;
+      var my = s.reacted[p.id] || {};
+      var addl = s.added[p.id] || {top:[], replies:{}};
+      var comments = p.comments.map(function(c, ci){ return {who:c.who, text:c.text, replies:(c.replies || []).concat((addl.replies || {})[ci] || [])}; });
+      (addl.top || []).forEach(function(c){ comments.push({who:c.who, text:c.text, replies:[]}); });
+      var nComments = comments.reduce(function(n, c){ return n + 1 + c.replies.length; }, 0);
+      var rt = s.replyTo[p.id], replying = rt !== undefined && rt !== null;
+      var link = postLink(V, p);
+      return {
+        isOrg: isOrg, isPerson: !isOrg,
+        authorName: isOrg ? ORG.name : Ad.name, authorTag: isOrg ? "Olin" : Ad.tag,
+        roleBg: isOrg ? "#E8ECFB" : Ad.roleBg, roleFg: isOrg ? "#1E3AA8" : Ad.roleFg,
+        authorLine: isOrg ? ORG.line : Ad.headline, authorFill: isOrg ? "#1E3AA8" : Ad.fill,
+        authorAria: isOrg ? ORG.name : "Open " + Ad.name + "'s profile",
+        openAuthor: function(){ self.open(p.author, false); },
+        time: p.time, typeLabel: T.label, typeBg: T.bg, typeFg: T.fg,
+        hasGroup: !!p.group, group: p.group,
+        showNote: isAlum && rank(p) < 2, noteText: rank(p) === 0 ? "From Olin" : "From " + p.group + ", a group you follow",
+        title: p.title, body: p.body, imgAlt: p.img, imgBg: p.bg, shapeA: p.a, shapeB: p.b,
+        hasEvent: !!p.event, eventWhen: p.event ? p.event.when : "", eventWhere: p.event ? p.event.where : "",
+        going: !!s.going[p.id], goingLabel: s.going[p.id] ? "You're going" : "I'm going",
+        goingBg: s.going[p.id] ? "#2443C9" : "#FFFFFF", goingFg: s.going[p.id] ? "#FFFFFF" : "#2443C9", goingBd: "#2443C9",
+        toggleGoing: function(){ var g = Object.assign({}, s.going); g[p.id] = !g[p.id]; self.setState({going: g}); },
+        hasLink: !!link, chain: link ? link.chain : [], linkText: link ? link.text : "",
+        hasTags: p.tags.length > 0,
+        tags: p.tags.map(function(id){ var d = decorate(person(id)); return {name:d.name, fill:d.fill, open:function(){ self.open(id, false); }}; }),
+        reactions: RX.map(function(r){
+          var on = !!my[r.key], c = p.react[r.key] + (on ? 1 : 0);
+          return { label:r.label, icon:r.icon, on:on, count:c, aria: r.label + ", " + c,
+            bg: on ? "#E8ECFB" : "#FFFFFF", fg: on ? "#1E3AA8" : "#111827", bd: on ? "#2443C9" : "#D5D9E2", fill: on ? "#C9D3F3" : "none",
+            toggle: function(){ var all = Object.assign({}, s.reacted), m = Object.assign({}, all[p.id] || {}); m[r.key] = !m[r.key]; all[p.id] = m; self.setState({reacted: all}); } };
+        }),
+        commentsOpen: !!s.openC[p.id], cBtnBg: s.openC[p.id] ? "#EEF2FC" : "#FFFFFF",
+        commentLabel: nComments ? nComments + (nComments === 1 ? " comment" : " comments") : "Comment",
+        toggleComments: function(){ var o = Object.assign({}, s.openC); o[p.id] = !o[p.id]; self.setState({openC: o}); },
+        comments: comments.map(function(c, ci){
+          var w = whoOf(c.who, V);
+          return { name:w.name, tag:w.tag, fill:w.fill, text:c.text,
+            reply: function(){ var r2 = Object.assign({}, s.replyTo); r2[p.id] = ci; self.setState({replyTo: r2}); },
+            replies: c.replies.map(function(r){ var w2 = whoOf(r.who, V); return {name:w2.name, tag:w2.tag, fill:w2.fill, text:r.text}; }) };
+        }),
+        isReplying: replying, replyName: replying && comments[rt] ? whoOf(comments[rt].who, V).name : "",
+        cancelReply: function(){ var r2 = Object.assign({}, s.replyTo); r2[p.id] = null; self.setState({replyTo: r2}); },
+        inputId: "c-" + p.id, draft: s.drafts[p.id] || "", placeholder: replying ? "Write a reply" : "Add a comment",
+        onDraft: function(e){ var d = Object.assign({}, s.drafts); d[p.id] = e.target.value; self.setState({drafts: d}); },
+        postComment: function(){
+          var text = (s.drafts[p.id] || "").trim(); if (!text) return;
+          var all = Object.assign({}, s.added), mine = {top:(addl.top || []).slice(), replies:Object.assign({}, addl.replies || {})};
+          if (replying && rt < p.comments.length) mine.replies[rt] = (mine.replies[rt] || []).concat([{who:"you", text:text}]);
+          else mine.top.push({who:"you", text:text});
+          all[p.id] = mine;
+          var d = Object.assign({}, s.drafts); d[p.id] = "";
+          var r2 = Object.assign({}, s.replyTo); r2[p.id] = null;
+          self.setState({added: all, drafts: d, replyTo: r2});
+        },
+        canReach: !isOrg, reachLabel: p.reachLabel || "Reach out",
+        reach: function(){ self.open(p.author, true, p); }
+      };
+    });
+
+    var CORNER = V.CORNER;
+    var corner = { classP: CORNER.classP, activityP: CORNER.activityP, companyP: CORNER.companyP, dots: CORNER.dots,
+      nodes: CORNER.pts.map(function(pt){
+        var p = PEOPLE[pt.i], d = decorate(p);
+        return { label: shortName(p), fill: d.fill, left: (pt.x / 3) + "%", top: (pt.y / 2.5) + "%",
+          aria: d.name + ", " + youShare(V.YOU_R[pt.i]) + " with you. Open profile", open: function(){ self.open(p.id, false); } };
+      }) };
+    var helpers = isAlum
+      ? Object.keys(ASKS).map(function(id){ var d = decorate(person(id)); d.headline = ASKS[id]; d.opens = []; d.open = function(){ self.open(id, false); }; return d; })
+      : HELPERS.map(function(id){ var d = decorate(person(id)); d.open = function(){ self.open(id, false); }; return d; });
+    var upcoming = [
+      {mon:"NOV", day:"14", title:"Alumni Weekend", sub:"Olin campus · all day"},
+      {mon:"DEC", day:"03", title:"Founders Night", sub:"Alumni founders on starting up"}
+    ];
+
+    /* Directory */
+    function passes(p, skipRole){
+      if (!skipRole && s.role !== "All" && p.role !== s.role) return false;
+      if (s.ind && p.industry !== s.ind) return false;
+      if (s.loc && p.region !== s.loc) return false;
+      if (s.openF && p.open.indexOf(s.openF) < 0) return false;
+      if (s.onlySaved && !s.saved[p.id]) return false;
+      return true;
+    }
+    var info = {}, base = [];
+    PEOPLE.forEach(function(p, i){ var m = matchPerson(p, q); if (m){ info[i] = m; base.push(i); } });
+    var list = base.filter(function(i){ return passes(PEOPLE[i], false); });
+    if (q) list.sort(function(a, b){ return info[b].score - info[a].score; }); else list.sort(function(a, b){ return PEOPLE[a].name.localeCompare(PEOPLE[b].name); });
+    var people = list.map(function(i){
+      var p = PEOPLE[i], d = decorate(p);
+      d.hasWhy = !!q; d.why = q ? info[i].why : "";
+      d.open = function(){ self.open(p.id, false); };
+      return d;
+    });
+    var roles = ["All","Alum","Student","Faculty","Staff"].map(function(r){
+      var on = s.role === r;
+      return { label: r === "All" ? "Everyone" : ROLE[r].label, on:on,
+        count: base.filter(function(i){ var p = PEOPLE[i]; return passes(p, true) && (r === "All" || p.role === r); }).length,
+        bg: on ? "#FFFFFF" : "transparent", shadow: on ? "0 1px 3px rgba(17, 24, 39, 0.12)" : "none",
+        pick: function(){ self.setState({role: r}); } };
+    });
+    var n = people.length;
+
+    /* Profile */
+    var P = person(s.sel) || PEOPLE[0], pi = IDX[P.id];
+    var prof = decorate(P);
+    prof.bio = P.bio;
+    prof.skillBtns = P.skills.map(function(k){ return { label:k, run:function(){ self.setState({view:"dir", q:k, role:"All", ind:"", loc:"", openF:"", onlySaved:false}); } }; });
+    prof.exp = P.exp.map(function(e){ return { t:e.t, o:e.o, y:e.y, mono: e.o.replace(/[^A-Za-z ]/g, "").split(" ").filter(Boolean).slice(0, 2).map(function(w){ return w[0]; }).join("").toUpperCase() }; });
+    prof.olin = P.olin.map(function(o){ return {label:o}; });
+    prof.olinLine = P.year ? "Class of " + P.year + " · " + P.major : P.major + " · at Olin since " + P.since;
+    prof.shared = P.shared.map(function(x){ return {label:x}; });
+    prof.posts = POSTS.filter(function(p){ return p.author === P.id || p.tags.indexOf(P.id) >= 0; }).map(function(p){
+      var T = TYPES[p.type], my = s.reacted[p.id] || {};
+      var total = RX.reduce(function(t, r){ return t + p.react[r.key] + (my[r.key] ? 1 : 0); }, 0);
+      return { typeLabel:T.label, typeBg:T.bg, typeFg:T.fg, title:p.title, time:p.time, imgBg:p.bg, shapeA:p.a,
+        relation: p.author === P.id ? "Posted" : "Tagged by " + (p.author === "olin" ? ORG.name : displayName(person(p.author))),
+        stats: total + " reactions · " + p.comments.length + " comments",
+        view: function(){ var o = Object.assign({}, s.openC); o[p.id] = true; self.setState({view:"home", ftype:"all", fgroup:"all", openC:o}); } };
+    });
+    prof.noPosts = prof.posts.length === 0;
+    prof.saved = !!s.saved[P.id];
+    prof.saveLabel = prof.saved ? "Saved" : "Save";
+    prof.saveFill = prof.saved ? "currentColor" : "none";
+    prof.saveFg = prof.saved ? "#2443C9" : "#111827";
+
+    /* Path from you */
+    var d0 = V.DIST[pi];
+    var pathIds = d0 < 99 ? chainTo(V, pi) : [pi];
+    prof.path = [{name:"You", fill:"#111827", bg:"#EEF0F4", arrow:false, via:""}].concat(pathIds.map(function(i, k){
+      var Q = PEOPLE[i], via;
+      if (k === 0) via = d0 < 99 ? V.YOU_R[i][0].label : "";
+      else via = V.PARENT[i].e.r[0].label;
+      return { name: shortName(Q), fill: ROLE[Q.role].fill, bg: i === pi ? "#E8ECFB" : "#F5F7FC", arrow: true, via: via };
+    }));
+    var introP = d0 >= 2 && d0 < 99 ? PEOPLE[pathIds[0]] : null;
+    prof.hasIntro = !!introP; prof.introName = introP ? displayName(introP) : "";
+    prof.pathText = d0 === 1 ? "You're " + youShare(V.YOU_R[pi]) + ", so you can reach out directly."
+      : d0 === 99 ? "You're not connected yet, but you can still reach out directly."
+      : "You're " + d0 + " steps apart. " + displayName(introP) + " knows you and is the best person to introduce you.";
+
+    var mw = { dots: MINI_DOTS, classP:"", activityP:"", companyP:"", nbrs: [] };
+    var cx = 500, cy = 150, pEdges = ADJ[pi].map(function(x){ return x.e; }).sort(function(a, b){ return b.r.length - a.r.length; }), kk = pEdges.length;
+    pEdges.forEach(function(e, j){
+      var o = PEOPLE[e.a === pi ? e.b : e.a], d = decorate(o);
+      var ang = -Math.PI / 2 + (j + 0.5) * 2 * Math.PI / Math.max(kk, 1) + (kk % 2 ? 0 : Math.PI / Math.max(kk, 1) / 2);
+      var x = Math.round(cx + 390 * Math.cos(ang)), y = Math.round(cy + 86 * Math.sin(ang));
+      mw[e.t + "P"] += "M" + cx + " " + cy + "L" + x + " " + y;
+      var why = e.r.map(function(x2){ return x2.label; }).join(" · ");
+      mw.nbrs.push({ name: d.name, fill: d.fill, why: why, left: (x / 10) + "%", top: (y / 3) + "%",
+        aria: d.name + ", " + why + ". Open profile", open: function(){ self.open(o.id, false); } });
+    });
+
+    var ctx = s.ctxPost ? POSTS.filter(function(p){ return p.id === s.ctxPost && p.author === P.id; })[0] : null;
+    var sentRec = s.sent[P.id];
+    var savedCount = Object.keys(s.saved).filter(function(k){ return s.saved[k]; }).length;
+    /* Messages */
+    var M = s.msgs[s.as], curId = s.thread[s.as];
+    var unreadN = M.order.filter(function(id){ return M.threads[id].unread; }).length;
+    var mq = (s.mq || "").trim().toLowerCase();
+    var visibleIds = M.order.filter(function(id){
+      var t = M.threads[id], P2 = person(id);
+      if (s.mtab === "unread" && !t.unread) return false;
+      if (!mq) return true;
+      return (P2.name + " " + t.subject + " " + t.list.map(function(m){ return m.text; }).join(" ")).toLowerCase().indexOf(mq) >= 0;
+    });
+    var threads = visibleIds.map(function(id){
+      var t = M.threads[id], d = decorate(person(id)), on = s.view === "msgs" && curId === id;
+      var msgsOnly = t.list.filter(function(m){ return m.kind !== "note"; }), last = msgsOnly[msgsOnly.length - 1];
+      return { name: d.name, fill: d.fill, on: on, unread: t.unread, subject: t.subject,
+        bg: on ? "#E8ECFB" : "#FFFFFF", bar: t.unread ? "#2443C9" : (on ? "#8EA2D6" : "transparent"),
+        fw: t.unread ? "700" : "500", subFg: t.unread ? "#1E3AA8" : "#111827",
+        timeFg: t.unread ? "#1E3AA8" : "#4B5563", timeFw: t.unread ? "700" : "400",
+        time: last ? last.time : "", snippet: last ? (last.from === "me" ? "You: " : "") + last.text : "No messages yet",
+        open: function(){ self.openThread(id); } };
+    });
+    var mtabs = [{key:"all", label:"All"}, {key:"unread", label:"Unread" + (unreadN ? " (" + unreadN + ")" : "")}].map(function(t){
+      var on = s.mtab === t.key;
+      return { label:t.label, on:on, bd: on ? "#2443C9" : "transparent", fg: on ? "#1E3AA8" : "#4B5563", pick: function(){ self.setState({mtab: t.key}); } };
+    });
+    var tq = (s.toQ || "").trim().toLowerCase();
+    var toList = PEOPLE.filter(function(p2){ return !tq || p2.name.toLowerCase().indexOf(tq) >= 0; }).slice(0, 5).map(function(p2){
+      var d = decorate(p2); return { name: d.name, fill: d.fill, headline: d.headline, pick: function(){ self.openThread(p2.id); } };
+    });
+    var ct = {}, hasThread = !!(curId && M.threads[curId]);
+    if (hasThread){
+      var CP = person(curId), cd = decorate(CP), ci = IDX[curId], lk = null, T0 = M.threads[curId];
+      if (V.DIST[ci] === 1) lk = "You and " + first(CP.name) + " are " + youShare(V.YOU_R[ci]) + ".";
+      else if (V.DIST[ci] < 99) lk = "You're connected through " + displayName(PEOPLE[chainTo(V, ci)[0]]) + ".";
+      ct = { name: cd.name, first: first(CP.name), fill: cd.fill, tag: cd.tag, roleBg: cd.roleBg, roleFg: cd.roleFg, headline: cd.headline,
+        subject: T0.subject, isEmpty: T0.list.length === 0,
+        hasLink: !!lk, linkText: lk || "", typing: !!s.typing[s.as + ":" + curId],
+        viewProfile: function(){ self.open(curId, false); },
+        msgs: T0.list.map(function(m){
+          var mine = m.from === "me";
+          return { isNote: m.kind === "note", isMsg: m.kind !== "note", text: m.text, time: m.time || "",
+            who: mine ? "You" : cd.name, fill: mine ? "#111827" : cd.fill, bar: mine ? "#2443C9" : "#E3E5EA" };
+        }) };
+    }
+    function sendChat(e){
+      if (e && e.preventDefault) e.preventDefault();
+      var text = (s.chat || "").trim(); if (!text || !hasThread) return;
+      self.setState({chat: ""});
+      self.pushMsg(s.as, curId, [{from:"me", time:"now", text:text}]);
+    }
+
+    var nav = [
+      {label:"Home", on: s.view === "home", go: function(){ self.setState({view:"home"}); }},
+      {label:"Oliners", on: s.view === "dir" && !s.onlySaved, go: function(){ self.setState({view:"dir", onlySaved:false}); }},
+      {label:"Messages", on: s.view === "msgs", hasBadge: unreadN > 0, badge: unreadN, aria: "Messages" + (unreadN ? ", " + unreadN + " unread" : ""),
+        go: function(){ var th = Object.assign({}, s.thread); if (!th[s.as] || !M.threads[th[s.as]]) th[s.as] = M.order[0]; self.setState({view:"msgs", thread: th}); if (th[s.as]) self.updM(s.as, function(M2){ if (M2.threads[th[s.as]]) M2.threads[th[s.as]].unread = false; }); }},
+      {label:"Saved · " + savedCount, on: s.view === "dir" && s.onlySaved, go: function(){ self.setState({view:"dir", onlySaved:true}); }}
+    ].map(function(t){ t.bg = t.on ? "#E8ECFB" : "transparent"; t.fg = t.on ? "#1E3AA8" : "#111827"; if (!t.aria) t.aria = t.label; if (!t.hasBadge){ t.hasBadge = false; t.badge = 0; } return t; });
+
+    return {
+      isHome: s.view === "home", isDir: s.view === "dir", isProfile: s.view === "profile",
+      nav: nav,
+      isMsgs: s.view === "msgs", threads: threads, hasThread: hasThread, noThread: !hasThread, ct: ct,
+      noThreads: threads.length === 0, noThreadsText: s.mtab === "unread" && !mq ? "You're all caught up." : "No messages match that search.",
+      mtabs: mtabs, mq: s.mq, onMq: function(e){ self.setState({mq: e.target.value}); },
+      newOpen: s.newOpen, toggleNew: function(){ self.setState({newOpen: !s.newOpen, toQ:""}); },
+      toQ: s.toQ, onToQ: function(e){ self.setState({toQ: e.target.value}); }, toList: toList,
+      chatDraft: s.chat, onChat: function(e){ self.setState({chat: e.target.value}); }, sendChat: sendChat,
+      chatBtnBg: (s.chat || "").trim() ? "#2443C9" : "#7A8BD6",
+      quick: QUICK.map(function(t){ return { label:t, use: function(){ self.setState({chat: t}); } }; }),
+      openProfThread: function(){ self.openThread(P.id); },
+      openSentThread: function(){ if (sentRec) self.openThread(sentRec.thread); },
+      q: s.q, hasQ: !!s.q,
+      onQ: function(e){ self.setState({q: e.target.value, view:"dir"}); },
+      clearQ: function(){ self.setState({q: ""}); },
+      goHome: function(){ self.setState({view:"home", ftype:"all", fgroup:"all"}); },
+      feedTabs: feedTabs, posts: posts, feedEmpty: posts.length === 0,
+      corner: corner, cornerSub: V.NEAR.length + " Oliners share a club, class or company with you. " + (V.REACHABLE - V.NEAR.length) + " more are a friend or two away.",
+      isAlum: isAlum, followsText: follows.join(" and "),
+      ftype: s.ftype, fgroup: s.fgroup,
+      onType: function(e){ self.setState({ftype: e.target.value}); },
+      onGroup: function(e){ self.setState({fgroup: e.target.value}); },
+      follows: follows.map(function(g){ return {label:g}; }),
+      viewAs: ["student","alum"].map(function(k){ var on = s.as === k; return { label: k === "alum" ? "Alum" : "Student", on:on,
+        bg: on ? "#FFFFFF" : "transparent", shadow: on ? "0 1px 3px rgba(17, 24, 39, 0.12)" : "none",
+        pick: function(){ self.setState({as:k, feed:"all"}); } }; }),
+      helpersTitle: isAlum ? "Students you could help" : "Oliners open to helping",
+      helpersSub: isAlum ? "Students who've shared what they're looking for." : "Alumni and faculty who've raised their hand, picked for your interests.",
+      helpers: helpers, upcoming: upcoming,
+      roles: roles, ind: s.ind, loc: s.loc, openF: s.openF,
+      onInd: function(e){ self.setState({ind: e.target.value}); },
+      onLoc: function(e){ self.setState({loc: e.target.value}); },
+      onOpen: function(e){ self.setState({openF: e.target.value}); },
+      hasFilters: s.role !== "All" || !!s.ind || !!s.loc || !!s.openF,
+      clearFilters: function(){ self.setState({role:"All", ind:"", loc:"", openF:""}); },
+      people: people, isEmpty: n === 0,
+      dirTitle: s.onlySaved ? "Saved" : (q ? n + (n === 1 ? " Oliner matches" : " Oliners match") + " “" + s.q.trim() + "”" : "Oliners"),
+      dirSub: s.onlySaved ? "People you've saved" : (q ? "Best matches first" : "Every student, alum, professor and staff member"),
+      emptyBody: s.onlySaved ? "Open a profile and select Save to keep people here." : "No one matches that yet. Try a broader term or clear a filter.",
+      resetAll: function(){ self.setState({q:"", role:"All", ind:"", loc:"", openF:"", onlySaved:false}); },
+      goBack: function(){ self.setState({view: s.prevView || "home"}); },
+      backLabel: s.prevView === "dir" ? "Back to Oliners" : "Back to the feed",
+      prof: prof, mw: mw,
+      askIntro: function(){ self.setState({composing:true, via:"intro"}); },
+      hasContext: !!ctx, contextTitle: ctx ? ctx.title : "",
+      toggleSave: function(){ var o = Object.assign({}, s.saved); o[P.id] = !o[P.id]; self.setState({saved: o}); },
+      startCompose: function(){ self.setState({composing: true}); },
+      cancelCompose: function(){ self.setState({composing: false}); },
+      reachLabel: sentRec ? "Message again" : "Reach out",
+      showPrompt: !s.composing && !sentRec,
+      composing: s.composing,
+      reasons: REASONS.map(function(r){ var on = s.reason === r; return { label:r, on:on, bg: on ? "#2443C9" : "#FFFFFF", fg: on ? "#FFFFFF" : "#111827", bd: on ? "#2443C9" : "#D5D9E2", pick:function(){ self.setState({reason:r, msg: draft(r, P, ctx)}); } }; }),
+      viaDirect: s.via !== "intro" || !introP, viaIntro: s.via === "intro" && !!introP,
+      pickDirect: function(){ self.setState({via:"direct"}); },
+      pickIntro: function(){ self.setState({via:"intro"}); },
+      msg: s.msg, onMsg: function(e){ self.setState({msg: e.target.value}); },
+      sendLabel: (s.via === "intro" && introP) ? "Ask " + displayName(introP) + " for an intro" : "Send to " + first(P.name),
+      sendBg: s.msg.trim() ? "#2443C9" : "#7A8BD6",
+      send: function(){
+        if (!s.msg.trim()){ var r0 = s.reason || "Career advice"; self.setState({msg: draft(r0, P, ctx), reason: r0}); return; }
+        var useIntro = s.via === "intro" && introP;
+        var o = Object.assign({}, s.sent); o[P.id] = { via: useIntro ? displayName(introP) : null, thread: useIntro ? introP.id : P.id };
+        self.setState({sent: o, composing: false});
+        var items = [];
+        if (useIntro) items.push({kind:"note", text:"You asked for an intro to " + displayName(P)});
+        else if (ctx) items.push({kind:"note", text:"About their post: " + ctx.title});
+        items.push({from:"me", time:"now", text: s.msg.trim()});
+        self.pushMsg(s.as, useIntro ? introP.id : P.id, items, useIntro ? "Happy to make the intro! I'll send " + first(P.name) + " a note today and loop you in." : null,
+          useIntro ? "Intro to " + displayName(P) + "?" : (ctx ? "Re: " + ctx.title : (s.reason || "Hello from a fellow Oliner")));
+      },
+      isSent: !!sentRec && !s.composing,
+      sentTitle: sentRec && sentRec.via ? "Intro requested from " + sentRec.via : "Note sent to " + first(P.name),
+      sentBody: sentRec && sentRec.via ? sentRec.via + " will pass your note along with some context. Your request is in Messages."
+        : "It's in " + first(P.name) + "'s Oval messages, and they'll get an email too. Replies show up in Messages."
+    };
+  }
+}
+
+
+const comp = new Component({});
+const S = reactive(comp.renderVals());
+comp.__refresh = function(prev){ Object.assign(S, comp.renderVals()); nextTick(function(){ if (comp.componentDidUpdate) comp.componentDidUpdate(comp.props, prev); }); };
+createApp({ template: "#app-template", setup(){ return S; } }).mount("#app");
+nextTick(function(){ if (comp.componentDidMount) comp.componentDidMount(); });
+
+</script>
+</body>
+</html>
